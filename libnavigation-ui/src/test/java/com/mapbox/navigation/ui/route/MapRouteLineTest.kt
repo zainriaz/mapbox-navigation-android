@@ -101,7 +101,6 @@ class MapRouteLineTest {
             every { initializeAlternativeRouteLayer(style, true, 1.0f, -7957339) } returns alternativeRouteLayer
             every { initializePrimaryRouteShieldLayer(style, 1.0f, -13665594) } returns primaryRouteShieldLayer
             every { initializePrimaryRouteLayer(style, true, 1.0f, -11097861) } returns primaryRouteLayer
-            every { initializeWayPointLayer(style, any(), any()) } returns waypointLayer
         }
     }
 
@@ -467,52 +466,6 @@ class MapRouteLineTest {
         ) { _, _ -> 1 }
 
         assertEquals(4, result.size)
-    }
-
-    @Test
-    fun buildWayPointFeatureCollection() {
-        val route = getDirectionsRoute(true)
-
-        val result = MapRouteLine.MapRouteLineSupport.buildWayPointFeatureCollection(route)
-
-        assertEquals(2, result.features()!!.size)
-    }
-
-    @Test
-    fun buildWayPointFeatureCollectionFirstFeatureOrigin() {
-        val route = getDirectionsRoute(true)
-
-        val result = MapRouteLine.MapRouteLineSupport.buildWayPointFeatureCollection(route)
-
-        assertEquals("{\"wayPoint\":\"origin\"}", result.features()!![0].properties().toString())
-    }
-
-    @Test
-    fun buildWayPointFeatureCollectionSecondFeatureOrigin() {
-        val route = getDirectionsRoute(true)
-
-        val result = MapRouteLine.MapRouteLineSupport.buildWayPointFeatureCollection(route)
-
-        assertEquals("{\"wayPoint\":\"destination\"}", result.features()!![1].properties().toString())
-    }
-
-    @Test
-    fun buildWayPointFeatureFromLeg() {
-        val route = getDirectionsRoute(true)
-
-        val result = MapRouteLine.MapRouteLineSupport.buildWayPointFeatureFromLeg(route.legs()!![0], 0)
-
-        assertEquals(-122.523514, (result!!.geometry() as Point).coordinates()[0], 0.0)
-        assertEquals(37.975355, (result.geometry() as Point).coordinates()[1], 0.0)
-    }
-
-    @Test
-    fun buildWayPointFeatureFromLegContainsOriginWaypoint() {
-        val route = getDirectionsRoute(true)
-
-        val result = MapRouteLine.MapRouteLineSupport.buildWayPointFeatureFromLeg(route.legs()!![0], 0)
-
-        assertEquals("\"origin\"", result!!.properties()!!["wayPoint"].toString())
     }
 
     private fun getDirectionsRoute(includeCongestion: Boolean): DirectionsRoute {

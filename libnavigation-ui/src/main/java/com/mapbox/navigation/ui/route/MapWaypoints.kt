@@ -24,7 +24,7 @@ internal class MapWaypoints(
 ) {
     private var waypointFeatureCollection: FeatureCollection = FeatureCollection.fromFeatures(arrayOf())
 
-    private val waypointSource: GeoJsonSource by lazy {
+    val waypointSource: GeoJsonSource by lazy {
         val wayPointGeoJsonOptions = GeoJsonOptions().withMaxZoom(16)
         val wayPointSource = GeoJsonSource(
             RouteConstants.WAYPOINT_SOURCE_ID,
