@@ -1,29 +1,16 @@
 package com.mapbox.navigation.ui.route;
 
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-
 import com.mapbox.mapboxsdk.maps.Style;
-import com.mapbox.mapboxsdk.style.expressions.Expression;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
-import com.mapbox.navigation.ui.utils.MapImageUtils;
 
 import static com.mapbox.mapboxsdk.style.expressions.Expression.color;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.exponential;
-import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.interpolate;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.literal;
-import static com.mapbox.mapboxsdk.style.expressions.Expression.match;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.product;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.zoom;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacement;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconPitchAlignment;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineCap;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineJoin;
@@ -31,16 +18,9 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
 import static com.mapbox.navigation.ui.route.RouteConstants.ALTERNATIVE_ROUTE_LAYER_ID;
 import static com.mapbox.navigation.ui.route.RouteConstants.ALTERNATIVE_ROUTE_SHIELD_LAYER_ID;
 import static com.mapbox.navigation.ui.route.RouteConstants.ALTERNATIVE_ROUTE_SOURCE_ID;
-import static com.mapbox.navigation.ui.route.RouteConstants.DESTINATION_MARKER_NAME;
-import static com.mapbox.navigation.ui.route.RouteConstants.ORIGIN_MARKER_NAME;
 import static com.mapbox.navigation.ui.route.RouteConstants.PRIMARY_ROUTE_LAYER_ID;
 import static com.mapbox.navigation.ui.route.RouteConstants.PRIMARY_ROUTE_SHIELD_LAYER_ID;
 import static com.mapbox.navigation.ui.route.RouteConstants.PRIMARY_ROUTE_SOURCE_ID;
-import static com.mapbox.navigation.ui.route.RouteConstants.WAYPOINT_DESTINATION_VALUE;
-import static com.mapbox.navigation.ui.route.RouteConstants.WAYPOINT_LAYER_ID;
-import static com.mapbox.navigation.ui.route.RouteConstants.WAYPOINT_ORIGIN_VALUE;
-import static com.mapbox.navigation.ui.route.RouteConstants.WAYPOINT_PROPERTY_KEY;
-import static com.mapbox.navigation.ui.route.RouteConstants.WAYPOINT_SOURCE_ID;
 
 public class MapRouteLayerProvider {
 
@@ -168,40 +148,5 @@ public class MapRouteLayerProvider {
        lineColor(alternativeRouteDefaultColor)
     );
     return alternativeRouteLayer;
-  }
-
-  SymbolLayer initializeWayPointLayer(Style style, Drawable originIcon,
-                                        Drawable destinationIcon) {
-    SymbolLayer wayPointLayer = style.getLayerAs(WAYPOINT_LAYER_ID);
-    if (wayPointLayer != null) {
-      style.removeLayer(wayPointLayer);
-    }
-
-    Bitmap bitmap = MapImageUtils.getBitmapFromDrawable(originIcon);
-    style.addImage(ORIGIN_MARKER_NAME, bitmap);
-    bitmap = MapImageUtils.getBitmapFromDrawable(destinationIcon);
-    style.addImage(DESTINATION_MARKER_NAME, bitmap);
-
-    wayPointLayer = new SymbolLayer(WAYPOINT_LAYER_ID, WAYPOINT_SOURCE_ID).withProperties(
-       iconImage(
-           match(
-               Expression.toString(get(WAYPOINT_PROPERTY_KEY)), literal(ORIGIN_MARKER_NAME),
-                       stop(WAYPOINT_ORIGIN_VALUE, literal(ORIGIN_MARKER_NAME)),
-                       stop(WAYPOINT_DESTINATION_VALUE, literal(DESTINATION_MARKER_NAME))
-               )),
-           iconSize(
-                interpolate(
-                   exponential(1.5f), zoom(),
-                       stop(0f, 0.6f),
-                       stop(10f, 0.8f),
-                       stop(12f, 1.3f),
-                       stop(22f, 2.8f)
-                )
-           ),
-           iconPitchAlignment(Property.ICON_PITCH_ALIGNMENT_MAP),
-           iconAllowOverlap(true),
-           iconIgnorePlacement(true)
-        );
-    return wayPointLayer;
   }
 }

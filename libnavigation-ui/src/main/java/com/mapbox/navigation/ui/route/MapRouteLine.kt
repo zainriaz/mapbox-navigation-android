@@ -1,8 +1,6 @@
 package com.mapbox.navigation.ui.route
 
 import android.content.Context
-import android.graphics.drawable.Drawable
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteLeg
@@ -10,7 +8,6 @@ import com.mapbox.core.constants.Constants
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
-import com.mapbox.geojson.Point
 import com.mapbox.libnavigation.ui.R
 import com.mapbox.mapboxsdk.location.LocationComponentConstants
 import com.mapbox.mapboxsdk.maps.Style
@@ -22,21 +19,16 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineGradient
 import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import com.mapbox.navigation.ui.route.MapRouteLine.MapRouteLineSupport.buildRouteLineExpression
-import com.mapbox.navigation.ui.route.MapRouteLine.MapRouteLineSupport.buildWayPointFeatureCollection
 import com.mapbox.navigation.ui.route.MapRouteLine.MapRouteLineSupport.generateFeatureCollection
 import com.mapbox.navigation.ui.route.MapRouteLine.MapRouteLineSupport.getBelowLayer
 import com.mapbox.navigation.ui.route.MapRouteLine.MapRouteLineSupport.getBooleanStyledValue
 import com.mapbox.navigation.ui.route.MapRouteLine.MapRouteLineSupport.getFloatStyledValue
-import com.mapbox.navigation.ui.route.MapRouteLine.MapRouteLineSupport.getResourceStyledValue
 import com.mapbox.navigation.ui.route.MapRouteLine.MapRouteLineSupport.getStyledColor
 import com.mapbox.navigation.ui.route.RouteConstants.ALTERNATIVE_ROUTE_SOURCE_ID
 import com.mapbox.navigation.ui.route.RouteConstants.HEAVY_CONGESTION_VALUE
 import com.mapbox.navigation.ui.route.RouteConstants.MODERATE_CONGESTION_VALUE
 import com.mapbox.navigation.ui.route.RouteConstants.PRIMARY_ROUTE_LAYER_ID
 import com.mapbox.navigation.ui.route.RouteConstants.SEVERE_CONGESTION_VALUE
-import com.mapbox.navigation.ui.route.RouteConstants.WAYPOINT_DESTINATION_VALUE
-import com.mapbox.navigation.ui.route.RouteConstants.WAYPOINT_ORIGIN_VALUE
-import com.mapbox.navigation.ui.route.RouteConstants.WAYPOINT_PROPERTY_KEY
 import com.mapbox.navigation.ui.utils.MapUtils
 import com.mapbox.navigation.utils.extensions.parallelMap
 import com.mapbox.navigation.utils.internal.ThreadController
@@ -91,11 +83,10 @@ internal class MapRouteLine(
         this.routeFeatureData.addAll(routeFeatureDatas)
     }
 
-    private var drawnWaypointsFeatureCollection: FeatureCollection = FeatureCollection.fromFeatures(arrayOf())
     private var drawnPrimaryRouteFeatureCollection: FeatureCollection = FeatureCollection.fromFeatures(arrayOf())
     private var drawnAlternativeRouteFeatureCollection: FeatureCollection = FeatureCollection.fromFeatures(arrayOf())
 
-    private var wayPointSource: GeoJsonSource
+    private val mapWaypoints = MapWaypoints(style)
     private val primaryRouteLineSource: GeoJsonSource
     private val alternativeRouteLineSource: GeoJsonSource
     private val routeLayerIds = mutableSetOf<String>()
@@ -208,14 +199,6 @@ internal class MapRouteLine(
      * Initializes the instance with appropriate default values.
      */
     init {
-        val wayPointGeoJsonOptions = GeoJsonOptions().withMaxZoom(16)
-        wayPointSource = mapRouteSourceProvider.build(
-            RouteConstants.WAYPOINT_SOURCE_ID,
-            drawnWaypointsFeatureCollection,
-            wayPointGeoJsonOptions
-        )
-        style.addSource(wayPointSource)
-
         val routeLineGeoJsonOptions = GeoJsonOptions().withMaxZoom(16).withLineMetrics(true)
         primaryRouteLineSource = mapRouteSourceProvider.build(
             RouteConstants.PRIMARY_ROUTE_SOURCE_ID,
@@ -232,24 +215,7 @@ internal class MapRouteLine(
         )
         style.addSource(alternativeRouteLineSource)
 
-        val originWaypointIcon = getResourceStyledValue(
-            R.styleable.NavigationMapRoute_originWaypointIcon,
-            R.drawable.ic_route_origin,
-            context,
-            styleRes
-        )
-
-        val destinationWaypointIcon = getResourceStyledValue(
-            R.styleable.NavigationMapRoute_destinationWaypointIcon,
-            R.drawable.ic_route_destination,
-            context,
-            styleRes
-        )
-        val originIcon = AppCompatResources.getDrawable(context, originWaypointIcon)
-        val destinationIcon = AppCompatResources.getDrawable(context, destinationWaypointIcon)
-        val belowLayer = getBelowLayer(belowLayerId, style)
-
-        initializeLayers(style, layerProvider, originIcon!!, destinationIcon!!, belowLayer)
+        initializeLayers(style, styleRes, layerProvider, belowLayerId)
         updateAlternativeLayersVisibility(alternativesVisible, routeLayerIds)
         updateAllLayersVisibility(allLayersAreVisible)
     }
@@ -272,7 +238,8 @@ internal class MapRouteLine(
         if (directionsRoutes.isNotEmpty()) {
             clearRouteData()
             this.directionsRoutes.addAll(directionsRoutes)
-            primaryRoute = this.directionsRoutes.first()
+            val primaryRoute = this.directionsRoutes.first()
+            this.primaryRoute = primaryRoute
             alternativesVisible = directionsRoutes.size > 1
             allLayersAreVisible = true
             val newRouteFeatureData = directionsRoutes.parallelMap(
@@ -281,7 +248,7 @@ internal class MapRouteLine(
             )
             routeFeatureData.addAll(newRouteFeatureData)
             drawRoutes(newRouteFeatureData)
-            drawWayPoints()
+            mapWaypoints.drawWayPoints(primaryRoute)
             updateAlternativeLayersVisibility(alternativesVisible, routeLayerIds)
             updateAllLayersVisibility(allLayersAreVisible)
         }
@@ -395,11 +362,11 @@ internal class MapRouteLine(
      */
     private fun initializeLayers(
         style: Style,
+        @androidx.annotation.StyleRes styleRes: Int,
         layerProvider: MapRouteLayerProvider,
-        originIcon: Drawable,
-        destinationIcon: Drawable,
-        belowLayerId: String
+        belowLayerId: String?
     ) {
+        val belowLayer = getBelowLayer(belowLayerId, style)
 
         layerProvider.initializeAlternativeRouteShieldLayer(
             style,
@@ -455,22 +422,8 @@ internal class MapRouteLine(
             routeLayerIds.add(this.id)
         }
 
-        layerProvider.initializeWayPointLayer(
-            style, originIcon, destinationIcon
-        ).apply {
-            MapUtils.addLayerToMap(
-                style,
-                this,
-                belowLayerId
-            )
-            routeLayerIds.add(this.id)
-        }
-    }
-
-    private fun drawWayPoints() {
-        primaryRoute?.let {
-            setWaypointsSource(buildWayPointFeatureCollection(it))
-        }
+        val waypointLayerId = mapWaypoints.initializeLayers(context, styleRes, belowLayer)
+        routeLayerIds.add(waypointLayerId)
     }
 
     private fun drawRoutes(routeData: List<RouteFeatureData>) {
@@ -509,7 +462,7 @@ internal class MapRouteLine(
         routeFeatureData.clear()
         setPrimaryRoutesSource(FeatureCollection.fromFeatures(arrayOf()))
         setAlternativeRoutesSource(FeatureCollection.fromFeatures(arrayOf()))
-        setWaypointsSource(FeatureCollection.fromFeatures(arrayOf()))
+        mapWaypoints.clearRouteData()
     }
 
     private fun setPrimaryRoutesSource(featureCollection: FeatureCollection) {
@@ -520,11 +473,6 @@ internal class MapRouteLine(
     private fun setAlternativeRoutesSource(featureCollection: FeatureCollection) {
         drawnAlternativeRouteFeatureCollection = featureCollection
         alternativeRouteLineSource.setGeoJson(drawnAlternativeRouteFeatureCollection)
-    }
-
-    private fun setWaypointsSource(featureCollection: FeatureCollection) {
-        drawnWaypointsFeatureCollection = featureCollection
-        wayPointSource.setGeoJson(drawnWaypointsFeatureCollection)
     }
 
     private fun updateAlternativeLayersVisibility(isAlternativeVisible: Boolean, routeLayerIds: Set<String>) {
@@ -829,46 +777,6 @@ internal class MapRouteLine(
             }
 
             return expressionStops
-        }
-
-        /**
-         * Builds a FeatureCollection representing waypoints from a DirectionsRoute
-         *
-         * @param route the route to use for generating the waypoints FeatureCollection
-         * @return a FeatureCollection representing the waypoints derived from the DirectionRoute
-         */
-        fun buildWayPointFeatureCollection(route: DirectionsRoute): FeatureCollection {
-            val wayPointFeatures = mutableListOf<Feature>()
-            route.legs()?.forEach {
-                buildWayPointFeatureFromLeg(it, 0)?.let { feature ->
-                    wayPointFeatures.add(feature)
-                }
-
-                it.steps()?.let { steps ->
-                    buildWayPointFeatureFromLeg(it, steps.lastIndex)?.let { feature ->
-                    wayPointFeatures.add(feature)
-                    }
-                }
-            }
-            return FeatureCollection.fromFeatures(wayPointFeatures)
-        }
-
-        /**
-         * Builds a Feature representing a waypoint for use on a Mapbox Map.
-         *
-         * @param leg the RouteLeg containing the waypoint info.
-         * @param index a value of 0 indicates a property value of origin
-         * will be added to the Feature else a value of destination will be used.
-         *
-         * @return a Feature represeting the waypoint from the RouteLog
-         */
-        fun buildWayPointFeatureFromLeg(leg: RouteLeg, index: Int): Feature? {
-            return leg.steps()?.get(index)?.maneuver()?.location()?.run {
-                Feature.fromGeometry(Point.fromLngLat(this.longitude(), this.latitude()))
-            }?.also {
-                val propValue = if (index == 0) WAYPOINT_ORIGIN_VALUE else WAYPOINT_DESTINATION_VALUE
-                it.addStringProperty(WAYPOINT_PROPERTY_KEY, propValue)
-            }
         }
     }
 }
