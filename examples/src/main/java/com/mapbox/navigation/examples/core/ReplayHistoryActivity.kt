@@ -29,6 +29,8 @@ import com.mapbox.navigation.core.replay.history.ReplayEventBase
 import com.mapbox.navigation.core.replay.history.ReplayHistoryLocationEngine
 import com.mapbox.navigation.core.replay.history.ReplayHistoryMapper
 import com.mapbox.navigation.core.replay.history.ReplayHistoryPlayer
+import com.mapbox.navigation.core.trip.session.TripSessionState
+import com.mapbox.navigation.core.trip.session.TripSessionStateObserver
 import com.mapbox.navigation.examples.R
 import com.mapbox.navigation.examples.utils.Utils
 import com.mapbox.navigation.examples.utils.extensions.toPoint
@@ -137,6 +139,7 @@ class ReplayHistoryActivity : AppCompatActivity() {
         setupReplayControls()
 
         navigationMapboxMap.addProgressChangeListener(mapboxNavigation)
+        mapboxNavigation.registerTripSessionStateObserver(tripSessionStateObserver)
 
         replayHistoryPlayer.playFirstLocation()
         mapboxMap.addOnMapLongClickListener { latLng ->
@@ -158,6 +161,21 @@ class ReplayHistoryActivity : AppCompatActivity() {
 
         playReplay.setOnClickListener {
             replayHistoryPlayer.play(this@ReplayHistoryActivity)
+        }
+    }
+
+    private val tripSessionStateObserver = object : TripSessionStateObserver {
+        override fun onSessionStateChanged(tripSessionState: TripSessionState) {
+            when (tripSessionState) {
+                TripSessionState.STARTED -> {
+                    navigationContext?.navigationMapboxMap?.updateLocationLayerRenderMode(RenderMode.GPS)
+                    navigationContext?.navigationMapboxMap?.updateCameraTrackingMode(NavigationCamera.NAVIGATION_TRACKING_MODE_GPS)
+                }
+                TripSessionState.STOPPED -> {
+//                    navigationContext?.navigationMapboxMap?.updateCameraTrackingMode(NavigationCamera.NAVIGATION_TRACKING_MODE_NONE)
+                    navigationContext?.navigationMapboxMap?.updateLocationLayerRenderMode(RenderMode.COMPASS)
+                }
+            }
         }
     }
 
@@ -193,8 +211,6 @@ class ReplayHistoryActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun ReplayNavigationContext.startNavigation() {
         if (mapboxNavigation.getRoutes().isNotEmpty()) {
-            navigationMapboxMap.updateLocationLayerRenderMode(RenderMode.GPS)
-            navigationMapboxMap.updateCameraTrackingMode(NavigationCamera.NAVIGATION_TRACKING_MODE_GPS)
             navigationMapboxMap.startCamera(mapboxNavigation.getRoutes()[0])
         }
         mapboxNavigation.startTripSession()
