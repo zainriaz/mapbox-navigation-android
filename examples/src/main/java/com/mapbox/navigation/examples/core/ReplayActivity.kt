@@ -14,6 +14,7 @@ import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.base.common.logger.model.Message
 import com.mapbox.common.logger.MapboxLogger
+import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
@@ -36,6 +37,7 @@ import com.mapbox.navigation.ui.map.NavigationMapboxMap
 import com.mapbox.navigation.ui.map.NavigationMapboxMapInstanceState
 import java.lang.ref.WeakReference
 import kotlinx.android.synthetic.main.activity_replay_route_layout.*
+import java.util.*
 
 /**
  * This activity shows how to use the MapboxNavigation
@@ -86,21 +88,23 @@ class ReplayActivity : AppCompatActivity(), OnMapReadyCallback {
                 navigationMapboxMap?.restoreFrom(state)
             }
             initializeFirstLocation()
+            mapboxNavigation?.requestRoutes(
+                RouteOptions.builder().applyDefaultParams()
+                    .accessToken(Utils.getMapboxAccessToken(applicationContext))
+//                        .coordinates(originLocation.toPoint(), null, latLng.toPoint())
+                    .coordinates(Point.fromLngLat(11.362452, 48.069813), null, Point.fromLngLat(11.380327, 48.071719))
+                    .alternatives(true)
+                    .profile(DirectionsCriteria.PROFILE_DRIVING_TRAFFIC)
+                    .build(),
+                routesReqCallback
+            )
         }
-        mapboxMap.addOnMapLongClickListener { latLng ->
-            mapboxMap.locationComponent.lastKnownLocation?.let { originLocation ->
-                mapboxNavigation?.requestRoutes(
-                    RouteOptions.builder().applyDefaultParams()
-                        .accessToken(Utils.getMapboxAccessToken(applicationContext))
-                        .coordinates(originLocation.toPoint(), null, latLng.toPoint())
-                        .alternatives(true)
-                        .profile(DirectionsCriteria.PROFILE_DRIVING_TRAFFIC)
-                        .build(),
-                    routesReqCallback
-                )
-            }
-            true
-        }
+//        mapboxMap.addOnMapLongClickListener { latLng ->
+//            mapboxMap.locationComponent.lastKnownLocation?.let { originLocation ->
+
+//            }
+//            true
+//        }
     }
 
     private fun initializeFirstLocation() {
@@ -209,6 +213,10 @@ class ReplayActivity : AppCompatActivity(), OnMapReadyCallback {
 
         override fun onSuccess(result: LocationEngineResult?) {
             result?.locations?.firstOrNull()?.let {
+                it.latitude = 48.069813
+                it.longitude = 11.362452
+                activityRef.get()?.mapboxReplayer?.pushEvents(Collections.singletonList(ReplayRouteMapper.mapToUpdateLocation(0.0, it)))
+                activityRef.get()?.mapboxReplayer?.playFirstLocation()
                 activityRef.get()?.mapboxMap?.locationComponent?.forceLocationUpdate(it)
             }
         }
