@@ -27,6 +27,7 @@ import com.mapbox.navigation.core.directions.session.RoutesRequestCallback
 import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import com.mapbox.navigation.core.replay.route2.ReplayRouteMapper
+import com.mapbox.navigation.core.replay.route2.ReplayRouteOptions
 import com.mapbox.navigation.core.trip.session.TripSessionState
 import com.mapbox.navigation.core.trip.session.TripSessionStateObserver
 import com.mapbox.navigation.examples.R
@@ -51,7 +52,9 @@ class ReplayActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mapInstanceState: NavigationMapboxMapInstanceState? = null
     private val firstLocationCallback = FirstLocationCallback(this)
 
-    private val replayRouteMapper = ReplayRouteMapper()
+    private val replayRouteMapper = ReplayRouteMapper(
+        options = ReplayRouteOptions.Builder().maxSpeedMps(20.0).build()
+    )
     private val mapboxReplayer = MapboxReplayer()
 
     @SuppressLint("MissingPermission")
@@ -92,7 +95,7 @@ class ReplayActivity : AppCompatActivity(), OnMapReadyCallback {
                 RouteOptions.builder().applyDefaultParams()
                     .accessToken(Utils.getMapboxAccessToken(applicationContext))
 //                        .coordinates(originLocation.toPoint(), null, latLng.toPoint())
-                    .coordinates(Point.fromLngLat(11.362452, 48.069813), null, Point.fromLngLat(11.380327, 48.071719))
+                    .coordinates(Point.fromLngLat(11.380327, 48.071719), null, Point.fromLngLat(11.362452, 48.069813))
                     .alternatives(true)
                     .profile(DirectionsCriteria.PROFILE_DRIVING_TRAFFIC)
                     .build(),
@@ -213,8 +216,8 @@ class ReplayActivity : AppCompatActivity(), OnMapReadyCallback {
 
         override fun onSuccess(result: LocationEngineResult?) {
             result?.locations?.firstOrNull()?.let {
-                it.latitude = 48.069813
-                it.longitude = 11.362452
+                it.latitude = 48.071719
+                it.longitude = 11.380327
                 activityRef.get()?.mapboxReplayer?.pushEvents(Collections.singletonList(ReplayRouteMapper.mapToUpdateLocation(0.0, it)))
                 activityRef.get()?.mapboxReplayer?.playFirstLocation()
                 activityRef.get()?.mapboxMap?.locationComponent?.forceLocationUpdate(it)
