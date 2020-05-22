@@ -30,7 +30,6 @@ class ReplayRouteInterpolatorTest {
             currentSpeed = speedMps
         }
         assertEquals(segment.steps.last().speedMps, defaultOptions.maxSpeedMps, 0.001)
-        assertTrue("${segment.steps.size} < 14", segment.steps.size < 14)
     }
 
     @Test
@@ -67,7 +66,6 @@ class ReplayRouteInterpolatorTest {
             assertTrue(first().speedMps <= startSpeedMps)
             assertEquals(last().speedMps, endSpeedMps, 0.001)
         }
-        assertTrue("${segment.steps.size} < 14", segment.steps.size < 11)
     }
 
     @Test
@@ -84,9 +82,8 @@ class ReplayRouteInterpolatorTest {
 
         segment.steps.apply {
             assertTrue(first().speedMps <= startSpeedMps)
-            assertTrue(last().speedMps < 0.001)
+            assertEquals(0.0, last().speedMps, 0.001)
         }
-        assertTrue("${segment.steps.size} < 12", segment.steps.size < 12)
     }
 
     @Test
@@ -124,7 +121,6 @@ class ReplayRouteInterpolatorTest {
             assertTrue(size > 5)
             assertEquals(last().positionMeters, 361.637, 0.001)
         }
-        assertTrue("${segment.steps.size} < 20", segment.steps.size < 20)
     }
 
     @Test
