@@ -13,11 +13,11 @@ import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.navigation.base.TimeFormat.TWENTY_FOUR_HOURS
 import com.mapbox.navigation.base.internal.VoiceUnit.METRIC
 import com.mapbox.navigation.base.internal.extensions.inferDeviceLocale
-import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.trip.model.RouteLegProgress
 import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.base.trip.model.RouteStepProgress
 import com.mapbox.navigation.base.trip.notification.NotificationAction
+import com.mapbox.navigation.base.trip.notification.TripNotificationOptions
 import com.mapbox.navigation.core.Rounding
 import com.mapbox.navigation.core.internal.MapboxDistanceFormatter
 import com.mapbox.navigation.core.internal.trip.service.MapboxTripService
@@ -84,16 +84,14 @@ class TripServiceActivityKt : AppCompatActivity(), OnMapReadyCallback {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
 
-        val formatter = MapboxDistanceFormatter.builder(this)
-            .withRoundingIncrement(Rounding.INCREMENT_FIFTY)
-            .withUnitType(METRIC)
-            .withLocale(this.inferDeviceLocale())
-            .build()
-
         mapboxTripNotification = MapboxTripNotification(
             applicationContext,
-            NavigationOptions.Builder()
-                .distanceFormatter(formatter)
+            TripNotificationOptions.Builder()
+                .distanceFormatter(MapboxDistanceFormatter.builder(this)
+                    .withRoundingIncrement(Rounding.INCREMENT_FIFTY)
+                    .withUnitType(METRIC)
+                    .withLocale(this.inferDeviceLocale())
+                    .build())
                 .timeFormatType(TWENTY_FOUR_HOURS)
                 .build()
         )

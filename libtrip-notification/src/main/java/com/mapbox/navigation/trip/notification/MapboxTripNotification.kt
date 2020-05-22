@@ -29,11 +29,11 @@ import com.mapbox.api.directions.v5.models.BannerText
 import com.mapbox.api.directions.v5.models.ManeuverModifier
 import com.mapbox.api.directions.v5.models.StepManeuver
 import com.mapbox.api.directions.v5.models.StepManeuver.StepManeuverType
-import com.mapbox.navigation.base.formatter.DistanceFormatter
 import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.base.trip.notification.NotificationAction
 import com.mapbox.navigation.base.trip.notification.TripNotification
+import com.mapbox.navigation.base.trip.notification.TripNotificationOptions
 import com.mapbox.navigation.trip.notification.internal.TimeFormatter.formatTime
 import com.mapbox.navigation.trip.notification.internal.maneuver.ManeuverIconHelper.DEFAULT_ROUNDABOUT_ANGLE
 import com.mapbox.navigation.trip.notification.internal.maneuver.ManeuverIconHelper.MANEUVER_ICON_DRAWER_MAP
@@ -65,7 +65,7 @@ import kotlinx.coroutines.channels.ClosedSendChannelException
 @MapboxModule(MapboxModuleType.NavigationTripNotification)
 class MapboxTripNotification constructor(
     private val applicationContext: Context,
-    private val navigationOptions: NavigationOptions
+    private var tripNotificationOptions: TripNotificationOptions
 ) : TripNotification {
 
     companion object {
@@ -91,9 +91,6 @@ class MapboxTripNotification constructor(
     private val etaFormat: String = applicationContext.getString(R.string.eta_format)
     private val navigationNotificationProvider = NavigationNotificationProvider
     private val notificationReceiver = NotificationActionReceiver()
-    private val distanceFormatter: DistanceFormatter =
-        navigationOptions.distanceFormatter
-            ?: throw IllegalArgumentException("Distance formatter is required.")
     private lateinit var notification: Notification
     private lateinit var notificationManager: NotificationManager
 
@@ -392,12 +389,9 @@ class MapboxTripNotification constructor(
 
     private fun updateDistanceText(routeProgress: RouteProgress) {
         if (currentDistanceText == null || newDistanceText(routeProgress)) {
-            currentDistanceText = ifNonNull(
-                distanceFormatter,
-                routeProgress.currentLegProgress
-            ) { distanceFormatter, routeLegProgress ->
+            currentDistanceText = ifNonNull(routeProgress.currentLegProgress) { routeLegProgress ->
                 routeLegProgress.currentStepProgress?.distanceRemaining?.let {
-                    distanceFormatter.formatDistance(it.toDouble())
+                    tripNotificationOptions.distanceFormatter?.formatDistance(it.toDouble())
                 }
             }
             collapsedNotificationRemoteViews?.setTextViewText(
@@ -417,7 +411,7 @@ class MapboxTripNotification constructor(
     ): String? =
         ifNonNull(routeProgress.currentLegProgress) { currentLegProgress ->
             val legDurationRemaining = currentLegProgress.durationRemaining
-            val timeFormatType = navigationOptions.timeFormatType
+            val timeFormatType = tripNotificationOptions.timeFormatType
             val arrivalTime = formatTime(
                 time,
                 legDurationRemaining.toDouble(),
@@ -441,15 +435,11 @@ class MapboxTripNotification constructor(
     }
 
     private fun newDistanceText(routeProgress: RouteProgress) =
-        ifNonNull(
-            distanceFormatter,
-            routeProgress.currentLegProgress,
-            currentDistanceText
-        ) { distanceFormatter, currentLegProgress, currentDistanceText ->
+        ifNonNull(routeProgress.currentLegProgress, currentDistanceText) { currentLegProgress, currentDistanceText ->
             val item = currentLegProgress.currentStepProgress?.distanceRemaining
             // The call below can return an empty spannable string. toString() will cause a NPE and ?. will not catch it.
             val str = item?.let {
-                distanceFormatter.formatDistance(it.toDouble())
+                tripNotificationOptions.distanceFormatter?.formatDistance(it.toDouble())
             }
             if (str != null) {
                 val formattedDistance = str.toString()

@@ -30,9 +30,9 @@ import com.mapbox.navigation.base.internal.extensions.ContextEx;
 import com.mapbox.navigation.base.formatter.DistanceFormatter;
 import com.mapbox.navigation.base.trip.model.RouteProgress;
 import com.mapbox.navigation.base.TimeFormat;
+import com.mapbox.navigation.core.Rounding;
 import com.mapbox.navigation.core.internal.MapboxDistanceFormatter;
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver;
-import com.mapbox.navigation.core.Rounding;
 import com.mapbox.navigation.ui.NavigationViewModel;
 import com.mapbox.navigation.ui.utils.ViewUtils;
 

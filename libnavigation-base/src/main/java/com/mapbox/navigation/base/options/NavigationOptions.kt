@@ -2,6 +2,7 @@ package com.mapbox.navigation.base.options
 
 import com.mapbox.navigation.base.TimeFormat
 import com.mapbox.navigation.base.formatter.DistanceFormatter
+import com.mapbox.navigation.base.trip.notification.TripNotificationOptions
 
 /**
  * Default navigator approximate prediction in milliseconds
@@ -34,7 +35,7 @@ data class NavigationOptions(
     val accessToken: String?,
     @TimeFormat.Type val timeFormatType: Int,
     val navigatorPredictionMillis: Long,
-    val distanceFormatter: DistanceFormatter?,
+    val tripNotificationOptions: TripNotificationOptions,
     val onboardRouterConfig: MapboxOnboardRouterConfig?,
     val isFromNavigationUi: Boolean,
     val isDebugLoggingEnabled: Boolean,
@@ -54,7 +55,7 @@ data class NavigationOptions(
         private var _accessToken: String? = null
         private var timeFormatType: Int = TimeFormat.NONE_SPECIFIED
         private var navigatorPredictionMillis: Long = DEFAULT_NAVIGATOR_PREDICTION_MILLIS
-        private var distanceFormatter: DistanceFormatter? = null
+        private var tripNotificationOptions: TripNotificationOptions = TripNotificationOptions.Builder().build()
         private var onboardRouterConfig: MapboxOnboardRouterConfig? = null
         private var isFromNavigationUi: Boolean = false
         private var isDebugLoggingEnabled: Boolean = false
@@ -85,10 +86,10 @@ data class NavigationOptions(
             apply { navigatorPredictionMillis = predictionMillis }
 
         /**
-         *  Defines format distances showing in notification during navigation
+         * TODO
          */
-        fun distanceFormatter(distanceFormatter: DistanceFormatter?) =
-            apply { this.distanceFormatter = distanceFormatter }
+        fun tripNotificationOptions(tripNotificationOptions: TripNotificationOptions) =
+            apply { this.tripNotificationOptions = tripNotificationOptions }
 
         /**
          * Defines configuration for the default on-board router
@@ -117,7 +118,7 @@ data class NavigationOptions(
                 accessToken = _accessToken,
                 timeFormatType = timeFormatType,
                 navigatorPredictionMillis = navigatorPredictionMillis,
-                distanceFormatter = distanceFormatter,
+                tripNotificationOptions = tripNotificationOptions,
                 onboardRouterConfig = onboardRouterConfig,
                 isFromNavigationUi = isFromNavigationUi,
                 isDebugLoggingEnabled = isDebugLoggingEnabled,

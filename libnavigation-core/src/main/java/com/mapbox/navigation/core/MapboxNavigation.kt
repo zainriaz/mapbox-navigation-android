@@ -16,7 +16,6 @@ import com.mapbox.base.common.logger.model.Message
 import com.mapbox.base.common.logger.model.Tag
 import com.mapbox.common.module.provider.MapboxModuleProvider
 import com.mapbox.navigation.base.TimeFormat
-import com.mapbox.navigation.base.internal.VoiceUnit
 import com.mapbox.navigation.base.internal.accounts.SkuTokenProvider
 import com.mapbox.navigation.base.internal.accounts.UrlSkuTokenProvider
 import com.mapbox.navigation.base.options.DEFAULT_NAVIGATOR_PREDICTION_MILLIS
@@ -27,6 +26,7 @@ import com.mapbox.navigation.base.route.Router
 import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.base.trip.notification.NotificationAction
 import com.mapbox.navigation.base.trip.notification.TripNotification
+import com.mapbox.navigation.base.trip.notification.TripNotificationOptions
 import com.mapbox.navigation.core.accounts.NavigationAccountsSession
 import com.mapbox.navigation.core.directions.session.AdjustedRouteOptionsProvider
 import com.mapbox.navigation.core.directions.session.DirectionsSession
@@ -34,7 +34,6 @@ import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.directions.session.RoutesRequestCallback
 import com.mapbox.navigation.core.fasterroute.FasterRouteController
 import com.mapbox.navigation.core.fasterroute.FasterRouteObserver
-import com.mapbox.navigation.core.internal.MapboxDistanceFormatter
 import com.mapbox.navigation.core.internal.accounts.MapboxNavigationAccounts
 import com.mapbox.navigation.core.internal.trip.service.TripService
 import com.mapbox.navigation.core.routerefresh.RouteRefreshController
@@ -624,7 +623,7 @@ constructor(
             }
             MapboxModuleType.NavigationTripNotification -> arrayOf(
                 Context::class.java to context.applicationContext,
-                NavigationOptions::class.java to navigationOptions
+                TripNotificationOptions::class.java to navigationOptions.tripNotificationOptions
             )
             MapboxModuleType.CommonLogger -> arrayOf()
             MapboxModuleType.CommonLibraryLoader -> throw IllegalArgumentException("not supported: $type")
@@ -686,15 +685,10 @@ constructor(
          */
         @JvmStatic
         fun defaultNavigationOptions(context: Context, accessToken: String?): NavigationOptions {
-            val distanceFormatter = MapboxDistanceFormatter.builder(context)
-                .withUnitType(VoiceUnit.UNDEFINED)
-                .withRoundingIncrement(Rounding.INCREMENT_FIFTY)
-                .build()
             val builder = NavigationOptions.Builder()
                 .accessToken(accessToken)
                 .timeFormatType(TimeFormat.NONE_SPECIFIED)
                 .navigatorPredictionMillis(DEFAULT_NAVIGATOR_PREDICTION_MILLIS)
-                .distanceFormatter(distanceFormatter)
 
             val tilesUri = URI("https://api.mapbox.com")
             // Latest version available https://api.mapbox.com/route-tiles/v1/versions?access_token=

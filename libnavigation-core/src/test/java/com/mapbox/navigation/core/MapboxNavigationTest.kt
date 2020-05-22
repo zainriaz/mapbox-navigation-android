@@ -15,6 +15,7 @@ import com.mapbox.base.common.logger.Logger
 import com.mapbox.common.module.provider.MapboxModuleProvider
 import com.mapbox.geojson.Point
 import com.mapbox.navigation.base.TimeFormat.NONE_SPECIFIED
+import com.mapbox.navigation.base.formatter.MapboxDistanceFormatter
 import com.mapbox.navigation.base.internal.extensions.inferDeviceLocale
 import com.mapbox.navigation.base.options.MapboxOnboardRouterConfig
 import com.mapbox.navigation.base.options.NavigationOptions
@@ -25,7 +26,6 @@ import com.mapbox.navigation.core.directions.session.AdjustedRouteOptionsProvide
 import com.mapbox.navigation.core.directions.session.DirectionsSession
 import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.directions.session.RoutesRequestCallback
-import com.mapbox.navigation.core.internal.MapboxDistanceFormatter
 import com.mapbox.navigation.core.internal.trip.service.TripService
 import com.mapbox.navigation.core.trip.session.OffRouteObserver
 import com.mapbox.navigation.core.trip.session.TripSession

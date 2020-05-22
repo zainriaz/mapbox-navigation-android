@@ -3,10 +3,10 @@ package com.mapbox.navigation.ui.summary
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.mapbox.navigation.base.TimeFormat.TWELVE_HOURS
+import com.mapbox.navigation.base.formatter.MapboxDistanceFormatter
+import com.mapbox.navigation.base.formatter.Rounding.INCREMENT_FIFTY
 import com.mapbox.navigation.base.internal.VoiceUnit.METRIC
 import com.mapbox.navigation.base.trip.model.RouteProgress
-import com.mapbox.navigation.core.Rounding.INCREMENT_FIFTY
-import com.mapbox.navigation.core.internal.MapboxDistanceFormatter
 import com.mapbox.navigation.trip.notification.internal.TimeFormatter.formatTime
 import com.mapbox.navigation.ui.BaseTest
 import java.util.Calendar

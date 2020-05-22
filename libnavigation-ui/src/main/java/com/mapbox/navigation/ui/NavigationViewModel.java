@@ -25,9 +25,10 @@ import com.mapbox.navigation.base.options.MapboxOnboardRouterConfig;
 import com.mapbox.navigation.base.options.NavigationOptions;
 import com.mapbox.navigation.base.trip.model.RouteProgress;
 import com.mapbox.navigation.base.TimeFormat;
-import com.mapbox.navigation.core.internal.MapboxDistanceFormatter;
+import com.mapbox.navigation.base.trip.notification.TripNotificationOptions;
 import com.mapbox.navigation.core.MapboxNavigation;
 import com.mapbox.navigation.core.directions.session.RoutesObserver;
+import com.mapbox.navigation.core.internal.MapboxDistanceFormatter;
 import com.mapbox.navigation.core.replay.route.ReplayRouteLocationEngine;
 import com.mapbox.navigation.core.trip.session.BannerInstructionsObserver;
 import com.mapbox.navigation.core.trip.session.OffRouteObserver;
@@ -185,11 +186,15 @@ public class NavigationViewModel extends AndroidViewModel {
       .accessToken(accessToken)
       .isFromNavigationUi(true);
 
-    if (options.navigationOptions().getDistanceFormatter() == null) {
+    if (options.navigationOptions().getTripNotificationOptions().getDistanceFormatter() == null) {
       this.distanceFormatter = buildDistanceFormatter(options);
-      updatedOptionsBuilder.distanceFormatter(distanceFormatter);
+      updatedOptionsBuilder.tripNotificationOptions(
+              new TripNotificationOptions.Builder()
+                      .distanceFormatter(distanceFormatter)
+                      .build()
+      );
     } else {
-      this.distanceFormatter = options.navigationOptions().getDistanceFormatter();
+      this.distanceFormatter = options.navigationOptions().getTripNotificationOptions().getDistanceFormatter();
     }
 
     if (options.navigationOptions().getOnboardRouterConfig() == null) {

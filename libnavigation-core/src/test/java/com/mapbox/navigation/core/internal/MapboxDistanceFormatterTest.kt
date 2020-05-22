@@ -5,11 +5,12 @@ import android.graphics.Typeface
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import androidx.test.core.app.ApplicationProvider
+import com.mapbox.navigation.base.formatter.MapboxDistanceFormatter
+import com.mapbox.navigation.base.formatter.Rounding.INCREMENT_FIFTY
+import com.mapbox.navigation.base.formatter.Rounding.INCREMENT_FIVE
 import com.mapbox.navigation.base.internal.VoiceUnit.IMPERIAL
 import com.mapbox.navigation.base.internal.VoiceUnit.METRIC
 import com.mapbox.navigation.base.internal.VoiceUnit.UNDEFINED
-import com.mapbox.navigation.core.Rounding.INCREMENT_FIFTY
-import com.mapbox.navigation.core.Rounding.INCREMENT_FIVE
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

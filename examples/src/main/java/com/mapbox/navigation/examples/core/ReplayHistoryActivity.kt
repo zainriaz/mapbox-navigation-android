@@ -20,10 +20,15 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
+import com.mapbox.navigation.base.internal.VoiceUnit.METRIC
 import com.mapbox.navigation.base.internal.extensions.applyDefaultParams
 import com.mapbox.navigation.base.internal.extensions.coordinates
+import com.mapbox.navigation.base.internal.extensions.inferDeviceLocale
+import com.mapbox.navigation.base.trip.notification.TripNotificationOptions
 import com.mapbox.navigation.core.MapboxNavigation
+import com.mapbox.navigation.core.Rounding
 import com.mapbox.navigation.core.directions.session.RoutesRequestCallback
+import com.mapbox.navigation.core.internal.MapboxDistanceFormatter
 import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import com.mapbox.navigation.core.replay.history.CustomEventMapper
@@ -123,8 +128,16 @@ class ReplayHistoryActivity : AppCompatActivity() {
 
     private fun createMapboxNavigation(locationEngine: LocationEngine): MapboxNavigation {
         val accessToken = Utils.getMapboxAccessToken(this)
-        val mapboxNavigationOptions = MapboxNavigation.defaultNavigationOptions(
-            this, accessToken)
+        val mapboxNavigationOptions = MapboxNavigation
+            .defaultNavigationOptions(this, accessToken).toBuilder()
+            .tripNotificationOptions(TripNotificationOptions.Builder()
+                .distanceFormatter(MapboxDistanceFormatter.Builder(this)
+                    .withRoundingIncrement(Rounding.INCREMENT_FIFTY)
+                    .withUnitType(METRIC)
+                    .withLocale(this.inferDeviceLocale())
+                    .build())
+                .build())
+            .build()
 
         return MapboxNavigation(
             applicationContext,
