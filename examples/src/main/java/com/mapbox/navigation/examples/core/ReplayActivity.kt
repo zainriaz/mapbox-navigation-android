@@ -129,7 +129,7 @@ class ReplayActivity : AppCompatActivity(), OnMapReadyCallback {
             if (routes.isNotEmpty()) {
                 navigationMapboxMap?.drawRoutes(routes)
 
-                val replayEvents = replayRouteMapper.mapDirectionsRouteLegAnnotation(routes[0])
+                val replayEvents = replayRouteMapper.mapDirectionsRouteGeometry(routes[0])
                 mapboxReplayer.pushEvents(replayEvents)
                 mapboxReplayer.seekTo(replayEvents.first())
 

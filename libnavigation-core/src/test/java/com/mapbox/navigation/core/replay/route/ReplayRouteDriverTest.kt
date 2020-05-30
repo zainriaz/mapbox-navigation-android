@@ -111,6 +111,16 @@ class ReplayRouteDriverTest {
     }
 
     @Test
+    fun `testing another route`() {
+        val geometry =
+            """ajuphAp}vtfFgLwDxPm`AfAeHcDy@oA]iOwDy]d[yIxHkRnPcMvKoVgI"""
+
+        val locations = replayRouteDriver.driveGeometry(defaultOptions, geometry)
+
+        assertTrue(locations.size > 10)
+    }
+
+    @Test
     fun `should not be weighted by duplicates`() {
         val points =
             LineString.fromJson(resourceAsString("not_be_weighted_by_duplicates_test.txt"))

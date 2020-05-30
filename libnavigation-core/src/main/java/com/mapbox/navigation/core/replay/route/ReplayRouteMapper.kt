@@ -1,6 +1,7 @@
 package com.mapbox.navigation.core.replay.route
 
 import android.location.Location
+import android.util.Log
 import com.mapbox.api.directions.v5.DirectionsCriteria
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.LegAnnotation
@@ -73,6 +74,7 @@ class ReplayRouteMapper @JvmOverloads constructor(
         val replayEvents = mutableListOf<ReplayEventBase>()
         routeLeg.steps()?.flatMap { legStep ->
             val geometry = legStep.geometry() ?: return emptyList()
+            Log.i("replay_debug", "replay_debug mapRouteLegGeometry $geometry")
             PolylineUtils.decode(geometry, 6)
         }?.also { points ->
             replayRouteDriver.drivePointList(options, points)
@@ -89,6 +91,7 @@ class ReplayRouteMapper @JvmOverloads constructor(
      * @return [ReplayEventBase] [List]
      */
     fun mapGeometry(geometry: String): List<ReplayEventBase> {
+        Log.i("replay_debug", "replay_debug mapGeometry $geometry")
         return replayRouteDriver.driveGeometry(options, geometry)
             .map { mapToUpdateLocation(it) }
     }
