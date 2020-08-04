@@ -35,6 +35,7 @@ import com.mapbox.navigator.VoiceInstruction
 import java.util.Date
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import okhttp3.Interceptor
 
 /**
  * Default implementation of [MapboxNativeNavigator] interface.
@@ -53,6 +54,12 @@ object MapboxNativeNavigatorImpl : MapboxNativeNavigator {
     private var route: DirectionsRoute? = null
     private var routeBufferGeoJson: Geometry? = null
     private val mutex = Mutex()
+
+    var networkInterceptor: Interceptor? = null
+        set(value) {
+            NavigatorLoader.networkInterceptor = value
+            field = value
+        }
 
     // Route following
 

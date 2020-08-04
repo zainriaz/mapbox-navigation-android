@@ -11,6 +11,7 @@ import com.mapbox.navigator.NavigatorConfig
 import com.mapbox.navigator.ProfileApplication
 import com.mapbox.navigator.ProfilePlatform
 import com.mapbox.navigator.SettingsProfile
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 
 /**
@@ -24,12 +25,17 @@ internal object NavigatorLoader {
         System.loadLibrary("navigator-android")
     }
 
+    var networkInterceptor: Interceptor? = null
+
     fun createNavigator(
         deviceProfile: DeviceProfile,
         navigatorConfig: NavigatorConfig,
         logger: Logger?
     ): Navigator {
-        HttpServiceFactory.setUserDefined(NavigationOkHttpService(OkHttpClient.Builder(), logger))
+        val httpClientBuilder = OkHttpClient.Builder()
+        networkInterceptor?.let { httpClientBuilder.addNetworkInterceptor(it) }
+        val navigationOkHttpService = NavigationOkHttpService(httpClientBuilder, logger)
+        HttpServiceFactory.setUserDefined(navigationOkHttpService)
         return Navigator(
             settingsProfile(deviceProfile),
             navigatorConfig,

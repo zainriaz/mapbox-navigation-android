@@ -63,6 +63,7 @@ import com.mapbox.navigation.utils.internal.monitorChannelWithException
 import com.mapbox.navigator.NavigatorConfig
 import com.mapbox.navigator.RouterParams
 import com.mapbox.navigator.TileEndpointConfiguration
+import kotlinx.coroutines.GlobalScope
 import java.lang.reflect.Field
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
@@ -688,7 +689,7 @@ class MapboxNavigation(
 
     private fun configureRouter() {
         with(navigationOptions) {
-            ThreadController.getMainScopeAndRootJob().scope.launch {
+            mainJobController.scope.launch {
                 val offlineFilesPath = OnboardRouterFiles(applicationContext, logger)
                     .absolutePath(onboardRouterOptions)
                 offlineFilesPath?.let { path ->
@@ -698,12 +699,12 @@ class MapboxNavigation(
                         null,
                         THREADS_COUNT,
                         TileEndpointConfiguration(
-                            onboardRouterOptions.tilesUri.toString(),
-                            onboardRouterOptions.tilesVersion,
-                            accessToken ?: "",
-                            USER_AGENT,
-                            "",
-                            NativeSkuTokenProvider(MapboxNavigationAccounts.getInstance(applicationContext))
+                                onboardRouterOptions.tilesUri.toString(),
+                                onboardRouterOptions.tilesVersion,
+                                accessToken ?: "",
+                                USER_AGENT,
+                                "",
+                                NativeSkuTokenProvider(MapboxNavigationAccounts.getInstance(applicationContext))
                         )
                     )
                     navigator.configureRouter(routerParams)
