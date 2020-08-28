@@ -32,10 +32,12 @@ import com.mapbox.navigation.core.replay.history.ReplayEventsObserver
 import com.mapbox.navigation.core.replay.history.ReplayHistoryMapper
 import com.mapbox.navigation.examples.R
 import com.mapbox.navigation.examples.history.HistoryFilesActivity
+import com.mapbox.navigation.examples.history.HistoryRecorder
 import com.mapbox.navigation.examples.utils.Utils
 import com.mapbox.navigation.examples.utils.extensions.toPoint
 import com.mapbox.navigation.ui.camera.NavigationCamera
 import com.mapbox.navigation.ui.map.NavigationMapboxMap
+import com.mapbox.navigation.utils.internal.ThreadController
 import kotlinx.android.synthetic.main.activity_replay_history_layout.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -109,8 +111,11 @@ class ReplayHistoryActivity : AppCompatActivity() {
                 style,
                 mapboxNavigation,
                 navigationMapboxMap,
-                mapboxReplay
+                mapboxReplay,
+                HistoryRecorder(mapboxNavigation)
             )
+            navigationContext.historyRecorder.startRecording()
+
             callback(navigationContext)
         }
     }
@@ -304,9 +309,12 @@ class ReplayHistoryActivity : AppCompatActivity() {
         super.onDestroy()
         loadNavigationJob?.cancelChildren()
         navigationContext?.apply {
-            mapboxReplayer.finish()
-            mapboxNavigation.stopTripSession()
-            mapboxNavigation.onDestroy()
+            ThreadController.getIOScopeAndRootJob().scope.launch {
+                historyRecorder.stopRecording()
+                mapboxReplayer.finish()
+                mapboxNavigation.stopTripSession()
+                mapboxNavigation.onDestroy()
+            }
         }
         mapView.onDestroy()
     }
@@ -323,7 +331,8 @@ private data class ReplayNavigationContext(
     val style: Style,
     val mapboxNavigation: MapboxNavigation,
     val navigationMapboxMap: NavigationMapboxMap,
-    val mapboxReplayer: MapboxReplayer
+    val mapboxReplayer: MapboxReplayer,
+    val historyRecorder: HistoryRecorder
 )
 
 private fun loadHistoryJsonFromAssets(context: Context, fileName: String): String {
