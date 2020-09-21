@@ -4,6 +4,7 @@ import com.mapbox.api.directions.v5.DirectionsCriteria
 import com.mapbox.api.directions.v5.models.LegAnnotation
 import com.mapbox.api.directions.v5.models.RouteLeg
 import com.mapbox.geojson.LineString
+import com.mapbox.geojson.MultiPoint
 import com.mapbox.geojson.Point
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfMeasurement
@@ -12,6 +13,7 @@ import kotlin.math.min
 internal class ReplayRouteDriver {
 
     private val routeSmoother = ReplayRouteSmoother()
+    private val routeBender = ReplayRouteBender()
     private val routeInterpolator = ReplayRouteInterpolator()
     private val replayRouteTraffic = ReplayRouteTraffic()
 
@@ -41,6 +43,7 @@ internal class ReplayRouteDriver {
         points: List<Point>
     ): List<ReplayRouteLocation> {
         val distinctPoints = routeSmoother.distinctPoints(points)
+        println("distinctPoints ${MultiPoint.fromLngLats(distinctPoints).toJson()}")
         if (distinctPoints.size < 2) return emptyList()
 
         val smoothLocations = routeInterpolator.createSpeedProfile(options, distinctPoints)
@@ -88,6 +91,7 @@ internal class ReplayRouteDriver {
     ): List<ReplayRouteLocation> {
         val replayRouteLocations = mutableListOf<ReplayRouteLocation>()
         var segmentStart = replayRouteLocations.addFirstTrafficLocation(routePoints)
+
         for (i in 0..trafficLocations.lastIndex) {
             val segmentEnd = trafficLocations[i]
             val segmentRoute = routeSmoother.segmentRoute(
@@ -100,8 +104,8 @@ internal class ReplayRouteDriver {
             replayRouteLocations.addInterpolatedLocations(
                 segmentOptions,
                 segmentRoute,
-                segmentStart,
-                segmentEnd
+                segmentStart.speedMps,
+                segmentEnd.speedMps
             )
             segmentStart = segmentEnd
         }
@@ -126,6 +130,10 @@ internal class ReplayRouteDriver {
         val replayRouteLocations = mutableListOf<ReplayRouteLocation>()
         replayRouteLocations.addLocation(smoothLocations.first())
 
+        val bentPoints = routeBender.bendRoute(smoothLocations)
+        println("smoothLocations ${MultiPoint.fromLngLats(smoothLocations.map { it.point }).toJson()}")
+        println("bentPoints ${MultiPoint.fromLngLats(bentPoints.map { it.point }).toJson()}")
+
         for (i in 0 until smoothLocations.lastIndex) {
             val segmentStart = smoothLocations[i]
             val segmentEnd = smoothLocations[i + 1]
@@ -134,13 +142,16 @@ internal class ReplayRouteDriver {
                 segmentStart.routeIndex!!,
                 segmentEnd.routeIndex!!
             )
+
             replayRouteLocations.addInterpolatedLocations(
                 options,
                 segmentRoute,
-                segmentStart,
-                segmentEnd
+                segmentStart.speedMps,
+                segmentEnd.speedMps
             )
         }
+
+        println("replayPoints ${MultiPoint.fromLngLats(replayRouteLocations.map { it.point }).toJson()}")
 
         return replayRouteLocations
     }
@@ -148,14 +159,14 @@ internal class ReplayRouteDriver {
     private fun MutableList<ReplayRouteLocation>.addInterpolatedLocations(
         options: ReplayRouteOptions,
         segmentRoute: List<Point>,
-        segmentStart: ReplayRouteLocation,
-        segmentEnd: ReplayRouteLocation
+        startSpeedMps: Double,
+        endSpeedMps: Double
     ) {
         val segmentDistance = TurfMeasurement.length(segmentRoute, TurfConstants.UNIT_METERS)
         val segment = routeInterpolator.interpolateSpeed(
             options,
-            segmentStart.speedMps,
-            segmentEnd.speedMps,
+            startSpeedMps,
+            endSpeedMps,
             segmentDistance
         )
 
@@ -166,6 +177,7 @@ internal class ReplayRouteDriver {
             val location = ReplayRouteLocation(null, point)
             location.distance = step.positionMeters
             location.speedMps = step.speedMps
+            println("distance ${location.distance} speed ${location.speedMps}")
             addLocation(location)
         }
     }

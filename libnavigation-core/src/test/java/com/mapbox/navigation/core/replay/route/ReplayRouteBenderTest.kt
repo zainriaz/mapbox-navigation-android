@@ -1,12 +1,8 @@
 package com.mapbox.navigation.core.replay.route
 
-import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
-import com.mapbox.turf.TurfMeasurement
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.math.abs
 
 class ReplayRouteBenderTest {
 
@@ -14,14 +10,14 @@ class ReplayRouteBenderTest {
 
     @Test
     fun `should create five locations for right turn`() {
-        val points = listOf<Point>(
+        val locations = listOf<Point>(
             Point.fromLngLat(-121.469564, 38.550752),
             Point.fromLngLat(-121.470253, 38.550968),
             Point.fromLngLat(-121.470024, 38.551490)
-        )
+        ).mapIndexed { index, point -> ReplayRouteLocation(index, point) }
 
-        val bentRoute = routeBender.bendRoute(points)
-        val maxBearingDelta = routeBender.maxBearingsDelta(bentRoute)
+        val bentRoute = routeBender.bendRoute(locations)
+        val maxBearingDelta = routeBender.maxBearingsDelta(bentRoute.map { it.point })
 
         assertTrue("$maxBearingDelta < ${ReplayRouteBender.MAX_BEARING_DELTA}",
             maxBearingDelta < ReplayRouteBender.MAX_BEARING_DELTA)
@@ -29,7 +25,7 @@ class ReplayRouteBenderTest {
 
     @Test
     fun `should create curves for routes with curves`() {
-        val points = listOf<Point>(
+        val locations = listOf<Point>(
             Point.fromLngLat(-122.445946, 37.737075),
             Point.fromLngLat(-122.445954, 37.737083),
             Point.fromLngLat(-122.445992, 37.737106),
@@ -57,12 +53,10 @@ class ReplayRouteBenderTest {
             Point.fromLngLat(-122.447785, 37.738033),
             Point.fromLngLat(-122.447922, 37.738056),
             Point.fromLngLat(-122.447999, 37.738063)
-        )
+        ).mapIndexed { index, point -> ReplayRouteLocation(index, point) }
 
-        println(LineString.fromLngLats(points).toJson())
-
-        val bentRoute = routeBender.bendRoute(points)
-        val maxBearingDelta = routeBender.maxBearingsDelta(bentRoute)
+        val bentRoute = routeBender.bendRoute(locations)
+        val maxBearingDelta = routeBender.maxBearingsDelta(bentRoute.map { it.point })
 
         assertTrue("$maxBearingDelta < ${ReplayRouteBender.MAX_BEARING_DELTA}",
             maxBearingDelta < ReplayRouteBender.MAX_BEARING_DELTA)
