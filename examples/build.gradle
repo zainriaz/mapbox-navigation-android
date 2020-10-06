@@ -5,6 +5,7 @@ apply plugin: 'com.mapbox.maps.token'
 apply from: "${rootDir}/gradle/script-git-version.gradle"
 apply from: "${rootDir}/gradle/ktlint.gradle"
 apply plugin: 'com.google.firebase.crashlytics'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion androidVersions.compileSdkVersion
@@ -128,4 +129,6 @@ dependencies {
     implementation(dependenciesList.okhttp) {
         force = true
     }
+
+    implementation 'com.google.firebase:firebase-analytics:17.5.0'
 }
