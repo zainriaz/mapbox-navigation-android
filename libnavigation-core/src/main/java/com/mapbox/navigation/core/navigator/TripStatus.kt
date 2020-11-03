@@ -1,4 +1,4 @@
-package com.mapbox.navigation.navigator.internal
+package com.mapbox.navigation.core.navigator
 
 import android.location.Location
 import com.mapbox.navigation.base.trip.model.RouteProgress
@@ -13,7 +13,7 @@ import com.mapbox.navigation.base.trip.model.RouteProgress
  *
  * @see [MapboxNativeNavigator.getStatus]
  */
-data class TripStatus(
+internal data class TripStatus(
     val enhancedLocation: Location,
     val keyPoints: List<Location>,
     val routeProgress: RouteProgress?,

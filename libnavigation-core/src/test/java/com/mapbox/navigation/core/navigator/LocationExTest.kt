@@ -1,4 +1,4 @@
-package com.mapbox.navigation.navigator
+package com.mapbox.navigation.core.navigator
 
 import android.location.Location
 import com.mapbox.geojson.Point

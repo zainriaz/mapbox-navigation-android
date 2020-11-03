@@ -13,14 +13,19 @@ import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.VoiceInstructions
 import com.mapbox.base.common.logger.Logger
 import com.mapbox.base.common.logger.model.Message
+import com.mapbox.geojson.Geometry
+import com.mapbox.geojson.gson.GeometryGeoJson
 import com.mapbox.navigation.base.trip.model.RouteLegProgress
 import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.base.trip.model.alert.RouteAlert
+import com.mapbox.navigation.core.navigator.ActiveGuidanceOptionsMapper
 import com.mapbox.navigation.core.sensors.SensorMapper
 import com.mapbox.navigation.core.trip.service.TripService
 import com.mapbox.navigation.navigator.internal.MapboxNativeNavigator
+import com.mapbox.navigation.core.navigator.NavigatorMapper
+import com.mapbox.navigation.core.navigator.TripStatus
+import com.mapbox.navigation.core.navigator.toFixLocation
 import com.mapbox.navigation.navigator.internal.MapboxNativeNavigatorImpl
-import com.mapbox.navigation.navigator.internal.TripStatus
 import com.mapbox.navigation.utils.internal.JobControl
 import com.mapbox.navigation.utils.internal.ThreadController
 import com.mapbox.navigation.utils.internal.ifNonNull
@@ -53,11 +58,11 @@ internal class MapboxTripSession(
     private val navigator: MapboxNativeNavigator = MapboxNativeNavigatorImpl,
     threadController: ThreadController = ThreadController,
     private val logger: Logger,
-    private val accessToken: String?
+    private val accessToken: String?,
+    private val navigatorMapper: NavigatorMapper = NavigatorMapper
 ) : TripSession {
 
     companion object {
-
         internal const val UNCONDITIONAL_STATUS_POLLING_PATIENCE = 2000L
         internal const val UNCONDITIONAL_STATUS_POLLING_INTERVAL = 1000L
         private const val LOCATION_POLLING_INTERVAL = 1000L
@@ -67,6 +72,9 @@ internal class MapboxTripSession(
             .setFastestInterval(LOCATION_FASTEST_INTERVAL)
             .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
             .build()
+
+        private const val GRID_SIZE = 0.0025f
+        private const val BUFFER_DILATION: Short = 1
     }
 
     private var updateNavigatorStatusDataJobs: MutableList<Job> = CopyOnWriteArrayList()
@@ -77,18 +85,34 @@ internal class MapboxTripSession(
             if (value == null) {
                 routeAlerts = emptyList()
                 routeProgress = null
+                routeGeometryWithBuffer = null
             }
             cancelOngoingUpdateNavigatorStatusDataJobs()
             mainJobController.scope.launch {
-                navigator.setRoute(value)?.let {
-                    routeAlerts = it.routeAlerts
+                val info = navigatorMapper.getRouteInitInfo(
+                    navigator.setRoute(
+                        routeJson = value?.toJson(),
+                        activeGuidanceOptions = ActiveGuidanceOptionsMapper.mapFrom(value)
+                    )
+                )
+                routeAlerts = info?.routeAlerts ?: emptyList()
+
+                val geometryWithBuffer = navigator.getRouteGeometryWithBuffer(
+                    GRID_SIZE,
+                    BUFFER_DILATION
+                )
+                routeGeometryWithBuffer = ifNonNull(geometryWithBuffer) {
+                    GeometryGeoJson.fromJson(it)
                 }
+
                 if (state == TripSessionState.STARTED) {
                     updateDataFromNavigatorStatus()
                 }
             }
             isOffRoute = false
         }
+
+    private var routeGeometryWithBuffer: Geometry? = null
 
     private fun cancelOngoingUpdateNavigatorStatusDataJobs() {
         updateNavigatorStatusDataJobs.forEach {
@@ -108,6 +132,7 @@ internal class MapboxTripSession(
     private val voiceInstructionsObservers = CopyOnWriteArraySet<VoiceInstructionsObserver>()
     private val routeAlertsObservers = CopyOnWriteArraySet<RouteAlertsObserver>()
     private val electronicHorizonObserver = ElectronicHorizonObserverImpl(mainJobController)
+    private val mapMatcherResultObservers = CopyOnWriteArraySet<MapMatcherResultObserver>()
 
     private val bannerInstructionEvent = BannerInstructionEvent()
     private val voiceInstructionEvent = VoiceInstructionEvent()
@@ -141,6 +166,7 @@ internal class MapboxTripSession(
             field = value
             routeAlertsObservers.forEach { it.onNewRouteAlerts(value) }
         }
+    private var mapMatcherResult: MapMatcherResult? = null
 
     /**
      * Return raw location
@@ -444,6 +470,25 @@ internal class MapboxTripSession(
         navigator.setElectronicHorizonObserver(null)
     }
 
+    override fun registerMapMatcherResultObserver(
+        mapMatcherResultObserver: MapMatcherResultObserver
+    ) {
+        mapMatcherResultObservers.add(mapMatcherResultObserver)
+        mapMatcherResult?.let {
+            mapMatcherResultObserver.onNewMapMatcherResult(it)
+        }
+    }
+
+    override fun unregisterMapMatcherResultObserver(
+        mapMatcherResultObserver: MapMatcherResultObserver
+    ) {
+        mapMatcherResultObservers.remove(mapMatcherResultObserver)
+    }
+
+    override fun unregisterAllMapMatcherResultObserver() {
+        mapMatcherResultObservers.clear()
+    }
+
     private var locationEngineCallback = object : LocationEngineCallback<LocationEngineResult> {
         override fun onSuccess(result: LocationEngineResult?) {
             result?.locations?.lastOrNull()?.let {
@@ -464,7 +509,7 @@ internal class MapboxTripSession(
         this.rawLocation = rawLocation
         locationObservers.forEach { it.onRawLocationChanged(rawLocation) }
         mainJobController.scope.launch {
-            navigator.updateLocation(rawLocation)
+            navigator.updateLocation(rawLocation.toFixLocation())
             updateDataFromNavigatorStatus()
         }
 
@@ -481,11 +526,15 @@ internal class MapboxTripSession(
 
     private fun updateDataFromNavigatorStatus() {
         val updateNavigatorStatusDataJob = mainJobController.scope.launch {
-            val status = getNavigatorStatus()
+            val status = getTripStatus()
             if (!isActive) {
                 return@launch
             }
             updateEnhancedLocation(status.enhancedLocation, status.keyPoints)
+            if (!isActive) {
+                return@launch
+            }
+            // updateMapMatcherResult(status.mapMatcherResult)
             if (!isActive) {
                 return@launch
             }
@@ -501,13 +550,20 @@ internal class MapboxTripSession(
         updateNavigatorStatusDataJobs.add(updateNavigatorStatusDataJob)
     }
 
-    private suspend fun getNavigatorStatus(): TripStatus {
-        return navigator.getStatus(navigatorPredictionMillis)
+    private suspend fun getTripStatus(): TripStatus {
+        return navigator.getStatus(navigatorPredictionMillis).let { status ->
+            NavigatorMapper.getTripStatus(route, routeGeometryWithBuffer, status)
+        }
     }
 
     private fun updateEnhancedLocation(location: Location, keyPoints: List<Location>) {
         enhancedLocation = location
         locationObservers.forEach { it.onEnhancedLocationChanged(location, keyPoints) }
+    }
+
+    private fun updateMapMatcherResult(mapMatcherResult: MapMatcherResult) {
+        this.mapMatcherResult = mapMatcherResult
+        mapMatcherResultObservers.forEach { it.onNewMapMatcherResult(mapMatcherResult) }
     }
 
     private fun updateRouteProgress(progress: RouteProgress?) {

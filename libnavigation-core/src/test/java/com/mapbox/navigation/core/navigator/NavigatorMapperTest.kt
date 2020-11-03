@@ -1,4 +1,4 @@
-package com.mapbox.navigation.navigator
+package com.mapbox.navigation.core.navigator
 
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.geojson.Point
@@ -18,7 +18,6 @@ import com.mapbox.navigation.base.trip.model.alert.TollCollectionAlert
 import com.mapbox.navigation.base.trip.model.alert.TollCollectionType
 import com.mapbox.navigation.base.trip.model.alert.TunnelEntranceAlert
 import com.mapbox.navigation.base.trip.model.alert.TunnelInfo
-import com.mapbox.navigation.navigator.internal.NavigatorMapper
 import com.mapbox.navigator.NavigationStatus
 import com.mapbox.navigator.RouteAlert
 import com.mapbox.navigator.RouteAlertAdminInfo
@@ -44,13 +43,11 @@ import java.util.Date
 
 class NavigatorMapperTest {
 
-    private val navigatorMapper = NavigatorMapper()
-
     @Test
     fun `route progress is null when route is null`() {
         val navigationStatus: NavigationStatus = mockk()
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             null,
             null,
             navigationStatus
@@ -61,7 +58,7 @@ class NavigatorMapperTest {
 
     @Test
     fun `route progress minimum requirements`() {
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             directionsRoute,
             null,
             navigationStatus
@@ -72,14 +69,14 @@ class NavigatorMapperTest {
 
     @Test
     fun `route init info is null when route info is null`() {
-        assertNull(navigatorMapper.getRouteInitInfo(null))
+        assertNull(NavigatorMapper.getRouteInitInfo(null))
     }
 
     @Test
     fun `alerts are present in the route init info is they are delivered from native`() {
         val routeInfo = RouteInfo(listOf(tunnelEntranceRouteAlert))
 
-        val result = navigatorMapper.getRouteInitInfo(routeInfo)!!
+        val result = NavigatorMapper.getRouteInitInfo(routeInfo)!!
 
         assertEquals(1, result.routeAlerts.size)
         assertEquals(RouteAlertType.TunnelEntrance, result.routeAlerts[0].alertType)
@@ -91,7 +88,7 @@ class NavigatorMapperTest {
             tunnelEntranceRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -132,7 +129,7 @@ class NavigatorMapperTest {
             secondEntrance
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -149,7 +146,7 @@ class NavigatorMapperTest {
             countryBorderCrossingRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -180,7 +177,7 @@ class NavigatorMapperTest {
             tollCollectionGantryRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -210,7 +207,7 @@ class NavigatorMapperTest {
             tollCollectionBoothRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -240,7 +237,7 @@ class NavigatorMapperTest {
             unknownTollCollectionRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -268,7 +265,7 @@ class NavigatorMapperTest {
             restStopRestRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -298,7 +295,7 @@ class NavigatorMapperTest {
             restStopServiceRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -328,7 +325,7 @@ class NavigatorMapperTest {
             unknownRestStopRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -356,7 +353,7 @@ class NavigatorMapperTest {
             restrictedAreaRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus
@@ -392,7 +389,7 @@ class NavigatorMapperTest {
             incidentRouteAlert.toUpcomingRouteAlert()
         )
 
-        val routeProgress = navigatorMapper.getRouteProgress(
+        val routeProgress = NavigatorMapper.getRouteProgress(
             mockk(relaxed = true),
             mockk(relaxed = true),
             navigationStatus

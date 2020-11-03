@@ -50,6 +50,7 @@ import com.mapbox.navigation.core.trip.service.TripService
 import com.mapbox.navigation.core.trip.session.BannerInstructionsObserver
 import com.mapbox.navigation.core.trip.session.EHorizonObserver
 import com.mapbox.navigation.core.trip.session.LocationObserver
+import com.mapbox.navigation.core.trip.session.MapMatcherResultObserver
 import com.mapbox.navigation.core.trip.session.OffRouteObserver
 import com.mapbox.navigation.core.trip.session.RouteAlertsObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
@@ -351,6 +352,7 @@ class MapboxNavigation(
         tripSession.unregisterAllVoiceInstructionsObservers()
         tripSession.unregisterAllRouteAlertsObservers()
         tripSession.unregisterAllEHorizonObservers()
+        tripSession.unregisterAllMapMatcherResultObserver()
         directionsSession.routes = emptyList()
         resetTripSession()
 
@@ -635,6 +637,14 @@ class MapboxNavigation(
      */
     fun unregisterEHorizonObserver(eHorizonObserver: EHorizonObserver) {
         tripSession.unregisterEHorizonObserver(eHorizonObserver)
+    }
+
+    fun registerMapMatcherResultObserver(mapMatcherResultObserver: MapMatcherResultObserver) {
+        tripSession.registerMapMatcherResultObserver(mapMatcherResultObserver)
+    }
+
+    fun unregisterMapMatcherResultObserver(mapMatcherResultObserver: MapMatcherResultObserver) {
+        tripSession.unregisterMapMatcherResultObserver(mapMatcherResultObserver)
     }
 
     /**

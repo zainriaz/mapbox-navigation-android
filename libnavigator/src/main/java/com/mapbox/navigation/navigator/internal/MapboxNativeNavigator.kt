@@ -1,13 +1,15 @@
 package com.mapbox.navigation.navigator.internal
 
 import android.location.Location
-import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.geojson.Point
 import com.mapbox.navigation.base.options.DeviceProfile
+import com.mapbox.navigator.ActiveGuidanceOptions
 import com.mapbox.navigator.BannerInstruction
 import com.mapbox.navigator.ElectronicHorizonObserver
+import com.mapbox.navigator.FixLocation
 import com.mapbox.navigator.NavigationStatus
 import com.mapbox.navigator.NavigatorConfig
+import com.mapbox.navigator.RouteInfo
 import com.mapbox.navigator.RouterResult
 import com.mapbox.navigator.SensorData
 import com.mapbox.navigator.TilesConfig
@@ -46,11 +48,11 @@ interface MapboxNativeNavigator {
     /**
      * Passes in the current raw location of the user.
      *
-     * @param rawLocation The current raw [Location] of user.
+     * @param rawLocation The current raw [FixLocation] of user.
      *
      * @return true if the raw location was usable, false if not.
      */
-    suspend fun updateLocation(rawLocation: Location): Boolean
+    suspend fun updateLocation(rawLocation: FixLocation): Boolean
 
     /**
      * Passes in the current sensor data of the user.
@@ -72,10 +74,10 @@ interface MapboxNativeNavigator {
      *
      * @param navigatorPredictionMillis millis for navigation status predictions.
      *
-     * @return the last [TripStatus] as a result of fixed location updates. If the timestamp
+     * @return the last [NavigationStatus] as a result of fixed location updates. If the timestamp
      * is earlier than a previous call, the last status will be returned. The function does not support re-winding time.
      */
-    suspend fun getStatus(navigatorPredictionMillis: Long): TripStatus
+    suspend fun getStatus(navigatorPredictionMillis: Long): NavigationStatus
 
     // Routing
 
@@ -84,16 +86,16 @@ interface MapboxNativeNavigator {
      * Returns initialized route state if no errors occurred.
      * Otherwise, it returns a invalid route state.
      *
-     * @param route [DirectionsRoute] to follow.
-     * @param legIndex Which leg to follow
+     * @param routeJson to follow.
+     * @param activeGuidanceOptions options
      *
-     * @return a [NavigationStatus] route state if no errors occurred.
+     * @return a [RouteInfo] route state if no errors occurred.
      * Otherwise, it returns a invalid route state.
      */
     suspend fun setRoute(
-        route: DirectionsRoute?,
-        legIndex: Int = INDEX_FIRST_LEG
-    ): RouteInitInfo?
+        routeJson: String?,
+        activeGuidanceOptions: ActiveGuidanceOptions
+    ): RouteInfo?
 
     /**
      * Updates annotations so that subsequent calls to getStatus will

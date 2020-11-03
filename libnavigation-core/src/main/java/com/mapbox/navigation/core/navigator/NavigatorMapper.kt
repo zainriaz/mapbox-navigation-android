@@ -1,4 +1,4 @@
-package com.mapbox.navigation.navigator.internal
+package com.mapbox.navigation.core.navigator
 
 import com.mapbox.api.directions.v5.models.BannerComponents
 import com.mapbox.api.directions.v5.models.BannerInstructions
@@ -30,6 +30,7 @@ import com.mapbox.navigation.base.trip.model.alert.TollCollectionType
 import com.mapbox.navigation.base.trip.model.alert.TunnelEntranceAlert
 import com.mapbox.navigation.base.trip.model.alert.TunnelInfo
 import com.mapbox.navigation.base.trip.model.alert.UpcomingRouteAlert
+import com.mapbox.navigation.navigator.internal.MapboxNativeNavigatorImpl
 import com.mapbox.navigation.utils.internal.ifNonNull
 import com.mapbox.navigator.BannerComponent
 import com.mapbox.navigator.BannerInstruction
@@ -50,16 +51,20 @@ import com.mapbox.navigator.RouteInfo
 import com.mapbox.navigator.RouteState
 import com.mapbox.navigator.VoiceInstruction
 
-private val SUPPORTED_ROUTE_ALERTS = arrayOf(
-    RouteAlertType.KTUNNEL_ENTRANCE,
-    RouteAlertType.KBORDER_CROSSING,
-    RouteAlertType.KTOLL_COLLECTION_POINT,
-    RouteAlertType.KSERVICE_AREA,
-    RouteAlertType.KRESTRICTED_AREA,
-    RouteAlertType.KINCIDENT
-)
+internal object NavigatorMapper {
 
-internal class NavigatorMapper {
+    private const val ONE_INDEX = 1
+    private const val ONE_SECOND_IN_MILLISECONDS = 1000.0
+    private const val FIRST_BANNER_INSTRUCTION = 0
+
+    private val SUPPORTED_ROUTE_ALERTS = arrayOf(
+        RouteAlertType.KTUNNEL_ENTRANCE,
+        RouteAlertType.KBORDER_CROSSING,
+        RouteAlertType.KTOLL_COLLECTION_POINT,
+        RouteAlertType.KSERVICE_AREA,
+        RouteAlertType.KRESTRICTED_AREA,
+        RouteAlertType.KINCIDENT
+    )
 
     private val arrayOfValidIncidentImpacts = arrayOf(
         IncidentImpact.CRITICAL,
@@ -67,6 +72,23 @@ internal class NavigatorMapper {
         IncidentImpact.MINOR,
         IncidentImpact.LOW
     )
+
+    fun getTripStatus(
+        directionsRoute: DirectionsRoute?,
+        routeBufferGeoJson: Geometry?,
+        status: NavigationStatus
+    ): TripStatus {
+        return TripStatus(
+            status.location.toLocation(),
+            status.key_points.map { it.toLocation() },
+            getRouteProgress(
+                directionsRoute,
+                routeBufferGeoJson,
+                status
+            ),
+            status.routeState == RouteState.OFF_ROUTE
+        )
+    }
 
     fun getRouteInitInfo(routeInfo: RouteInfo?) = routeInfo.toRouteInitInfo()
 
@@ -375,13 +397,6 @@ internal class NavigatorMapper {
             endCoordinate = endCoordinate,
             endGeometryIndex = endGeometryIndex,
         ).build()
-    }
-
-    companion object {
-
-        private const val ONE_INDEX = 1
-        private const val ONE_SECOND_IN_MILLISECONDS = 1000.0
-        private const val FIRST_BANNER_INSTRUCTION = 0
     }
 
     private fun RouteAlertTunnelInfo?.toTunnelInfo() = ifNonNull(
