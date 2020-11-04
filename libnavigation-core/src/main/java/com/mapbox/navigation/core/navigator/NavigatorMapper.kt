@@ -30,6 +30,7 @@ import com.mapbox.navigation.base.trip.model.alert.TollCollectionType
 import com.mapbox.navigation.base.trip.model.alert.TunnelEntranceAlert
 import com.mapbox.navigation.base.trip.model.alert.TunnelInfo
 import com.mapbox.navigation.base.trip.model.alert.UpcomingRouteAlert
+import com.mapbox.navigation.core.trip.session.MapMatcherResult
 import com.mapbox.navigation.navigator.internal.MapboxNativeNavigatorImpl
 import com.mapbox.navigation.utils.internal.ifNonNull
 import com.mapbox.navigator.BannerComponent
@@ -78,19 +79,23 @@ internal object NavigatorMapper {
         routeBufferGeoJson: Geometry?,
         status: NavigationStatus
     ): TripStatus {
+        val mapMatcherResult = status.getMapMatcherResult()
         return TripStatus(
-            status.location.toLocation(),
-            status.key_points.map { it.toLocation() },
+            mapMatcherResult.enhancedLocation,
+            mapMatcherResult.keyPoints,
             getRouteProgress(
                 directionsRoute,
                 routeBufferGeoJson,
                 status
             ),
-            status.routeState == RouteState.OFF_ROUTE
+            status.routeState == RouteState.OFF_ROUTE,
+            mapMatcherResult
         )
     }
 
     fun getRouteInitInfo(routeInfo: RouteInfo?) = routeInfo.toRouteInitInfo()
+
+
 
     /**
      * Builds [RouteProgress] object based on [NavigationStatus] returned by [Navigator]
@@ -484,4 +489,15 @@ internal object NavigatorMapper {
         ifNonNull(this) { congestion ->
             IncidentCongestion.Builder().value(congestion.value).build()
         }
+
+    private fun NavigationStatus.getMapMatcherResult(): MapMatcherResult {
+        return MapMatcherResult(
+            this.location.toLocation(),
+            this.key_points.map { it.toLocation() },
+            this.offRoadProba > 0.5,
+            this.offRoadProba,
+            this.map_matcher_output.isTeleport,
+            this.map_matcher_output.matches.firstOrNull()?.proba ?: 0f
+        )
+    }
 }

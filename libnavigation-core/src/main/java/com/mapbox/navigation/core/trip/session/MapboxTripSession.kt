@@ -534,7 +534,7 @@ internal class MapboxTripSession(
             if (!isActive) {
                 return@launch
             }
-            // updateMapMatcherResult(status.mapMatcherResult)
+            updateMapMatcherResult(status.mapMatcherResult)
             if (!isActive) {
                 return@launch
             }
