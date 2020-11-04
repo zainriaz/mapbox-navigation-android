@@ -1860,6 +1860,35 @@ class MapRouteLineTest {
     }
 
     @Test
+    fun getRouteLineExpressionDataWithStreetClassOverrideWhenHasSpottyStreetClassesOnMotorway() {
+        val congestionColorProvider: (String, Boolean) -> Int = { trafficCongestion, _ ->
+            when (trafficCongestion) {
+                UNKNOWN_CONGESTION_VALUE -> -9
+                LOW_CONGESTION_VALUE -> -1
+                else -> 33
+            }
+        }
+        val routeAsJsonJson = loadJsonFixture("motorway-route-with-spotty-road-classes.json")
+        val route = DirectionsRoute.fromJson(routeAsJsonJson)
+
+        val trafficExpressionData = getRouteLineTrafficExpressionData(route)
+        val result = getRouteLineExpressionDataWithStreetClassOverride(
+            trafficExpressionData,
+            route.distance(),
+            congestionColorProvider,
+            true,
+            listOf("motorway")
+        )
+
+        assertEquals(Expression.color(-1), result[0].segmentColorExpression)
+        assertEquals(0.0, result[0].offset, 0.0)
+        assertEquals(Expression.color(-9), result[1].segmentColorExpression)
+        assertEquals(0.01737473448246668, result[1].offset, 0.0)
+        assertEquals(Expression.color(-1), result[2].segmentColorExpression)
+        assertEquals(0.17172555753943433, result[2].offset, 0.0)
+    }
+
+    @Test
     fun getRouteLineExpressionDataWithSomeRoadClassesDuplicatesRemoved() {
         val congestionColorProvider: (String, Boolean) -> Int = { trafficCongestion, _ ->
             when (trafficCongestion) {
