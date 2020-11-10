@@ -381,6 +381,12 @@ jobs:
     steps:
       - checkout
       - trigger-mobile-metrics
+      - run:
+        when: on_fail
+        command: echo "Mobile metrics run failed"
+      - run:
+        when: on_success
+        command: echo "Mobile metrics run succeeded"
 
   release-snapshot:
     working_directory: ~/code
