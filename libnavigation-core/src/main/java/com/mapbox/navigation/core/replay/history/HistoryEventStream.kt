@@ -27,10 +27,6 @@ class HistoryEventStream(
     private var state = State.INIT
     private var peek: ReplayEventBase? = null
 
-    fun read(count: Int): List<ReplayEventBase> {
-        return this.asSequence().take(count).toList()
-    }
-
     override fun close() {
         state = State.CLOSED
         jsonReader.close()
@@ -105,6 +101,13 @@ class HistoryEventStream(
                 jsonObject.toString(),
                 ReplayEventUpdateLocation::class.java
             )
+            "getStatus" -> {
+                val eventTimestamp = (jsonObject["event_timestamp"]
+                    ?: jsonObject["timestamp"]).asDouble
+                ReplayEventGetStatus(
+                    eventTimestamp = eventTimestamp
+                )
+            }
             "getStatusMonotonic" -> {
                 val eventTimestamp = jsonObject["event_timestamp"].asDouble
                 ReplayEventGetStatus(

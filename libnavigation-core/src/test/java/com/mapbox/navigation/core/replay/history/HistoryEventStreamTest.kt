@@ -18,10 +18,29 @@ class HistoryEventStreamTest {
     private val historyFile = "history-events-file.json"
 
     @Test
-    fun `read file as a stream`() {
+    fun `read a couple elements from the stream`() {
         val historyEventStream = resourceAsHistoryEventStream(historyFile)
 
-        val replayEvents = historyEventStream.read(10)
+        val replayEvents = historyEventStream
+            .asSequence()
+            .filterIsInstance<ReplayEventUpdateLocation>()
+            .take(10)
+            .toList()
+
+        println("memoryUsed: ${memoryTestRule.memoryUsedMB}")
+        assertEquals(10, replayEvents.size)
+    }
+
+    @Test
+    fun `read a couple elements from the string`() {
+        val historyString = resourceAsString(historyFile)
+        val replayHistoryMapper = ReplayHistoryMapper()
+
+        val replayEvents = replayHistoryMapper.mapToReplayEvents(historyString)
+            .asSequence()
+            .filterIsInstance<ReplayEventUpdateLocation>()
+            .take(10)
+            .toList()
 
         println("memoryUsed: ${memoryTestRule.memoryUsedMB}")
         assertEquals(10, replayEvents.size)
@@ -31,21 +50,24 @@ class HistoryEventStreamTest {
     fun `read entire file as a stream`() {
         val historyEventStream = resourceAsHistoryEventStream(historyFile)
 
-        val replayEvents = historyEventStream.read(580)
-            .filterIsInstance<ReplayEventUpdateLocation>()
+        var counted = 0
+        while (historyEventStream.hasNext()) {
+            val next = historyEventStream.next()
+            counted++
+        }
 
         println("memoryUsed: ${memoryTestRule.memoryUsedMB}")
-        assertEquals(180, replayEvents.size)
+        assertEquals(3270, counted)
     }
 
     @Test
-    fun `read file as a string`() {
+    fun `read entire file as a string`() {
         val historyString = resourceAsString(historyFile)
         val replayHistoryMapper = ReplayHistoryMapper()
         val replayEvents = replayHistoryMapper.mapToReplayEvents(historyString)
 
         println("memoryUsed: ${memoryTestRule.memoryUsedMB}")
-        assertEquals(363, replayEvents.size)
+        assertEquals(3270, replayEvents.size)
     }
 
     private fun resourceAsHistoryEventStream(
