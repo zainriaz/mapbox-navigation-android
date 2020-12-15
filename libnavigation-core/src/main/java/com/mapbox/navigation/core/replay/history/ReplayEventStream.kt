@@ -15,7 +15,7 @@ import java.io.Closeable
 /**
  * Lower memory option for reading replay events from a history file.
  */
-class HistoryEventStream(
+class ReplayEventStream(
     private val jsonReader: JsonReader
 ) : Closeable, Iterator<ReplayEventBase> {
 

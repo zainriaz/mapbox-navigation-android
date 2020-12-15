@@ -6,7 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import com.mapbox.base.common.logger.model.Message
 import com.mapbox.common.logger.MapboxLogger
-import com.mapbox.navigation.core.replay.history.HistoryEventStream
+import com.mapbox.navigation.core.replay.history.ReplayEventStream
 import com.mapbox.navigation.examples.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +29,7 @@ class HistoryFilesViewController {
     fun attach(
         context: Context,
         viewAdapter: HistoryFileAdapter,
-        result: (HistoryEventStream?) -> Unit
+        result: (ReplayEventStream?) -> Unit
     ) {
         this.viewAdapter = viewAdapter
         viewAdapter.itemClicked = { historyFileItem ->
@@ -98,12 +98,12 @@ class HistoryFilesViewController {
 
     private fun requestFromFileCache(
         historyFileItem: ReplayPath,
-        result: (HistoryEventStream?) -> Unit
+        result: (ReplayEventStream?) -> Unit
     ) {
         CoroutineScope(Dispatchers.Main).launch {
             val data = loadFromFileCache(historyFileItem)
             val historyEventStream = if (data != null) {
-                HistoryEventStream(data)
+                ReplayEventStream(data)
             } else {
                 null
             }
@@ -130,14 +130,14 @@ class HistoryFilesViewController {
 
     private fun requestFromServer(
         replayPath: ReplayPath,
-        result: (HistoryEventStream?) -> Unit
+        result: (ReplayEventStream?) -> Unit
     ): Job {
         return CoroutineScope(Dispatchers.Main).launch {
             val replayHistoryDTO = historyFilesApi.requestJsonFile(replayPath.path)
             val historyEventStream = if (replayHistoryDTO != null) {
                 val json = Gson().toJson(replayHistoryDTO)
                 val jsonReader = JsonReader(StringReader(json))
-                HistoryEventStream(jsonReader)
+                ReplayEventStream(jsonReader)
             } else {
                 null
             }
@@ -148,7 +148,7 @@ class HistoryFilesViewController {
     private fun requestFromAssets(
         context: Context,
         historyFileItem: ReplayPath,
-        result: (HistoryEventStream?) -> Unit
+        result: (ReplayEventStream?) -> Unit
     ) {
         CoroutineScope(Dispatchers.Main).launch {
             val data = loadFromAssets(context, historyFileItem)
@@ -161,9 +161,9 @@ class HistoryFilesViewController {
     private suspend fun loadFromAssets(
         context: Context,
         historyFileItem: ReplayPath
-    ): HistoryEventStream? = withContext(Dispatchers.IO) {
+    ): ReplayEventStream? = withContext(Dispatchers.IO) {
         val inputStream: InputStream = context.assets.open(historyFileItem.path, ACCESS_STREAMING)
         val jsonReader = JsonReader(InputStreamReader(inputStream))
-        HistoryEventStream(jsonReader)
+        ReplayEventStream(jsonReader)
     }
 }

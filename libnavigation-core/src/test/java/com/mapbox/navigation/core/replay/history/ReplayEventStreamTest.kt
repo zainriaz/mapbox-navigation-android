@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 import java.io.InputStreamReader
 
 @RunWith(RobolectricTestRunner::class)
-class HistoryEventStreamTest {
+class ReplayEventStreamTest {
 
     @get:Rule
     val memoryTestRule = MemoryTestRule()
@@ -73,10 +73,10 @@ class HistoryEventStreamTest {
     private fun resourceAsHistoryEventStream(
         name: String,
         packageName: String = "com.mapbox.navigation.core.replay.history"
-    ): HistoryEventStream {
+    ): ReplayEventStream {
         val inputStream = javaClass.classLoader?.getResourceAsStream("$packageName/$name")
         val jsonReader = JsonReader(InputStreamReader(inputStream!!))
-        return HistoryEventStream(jsonReader)
+        return ReplayEventStream(jsonReader)
     }
 
     private fun resourceAsString(
