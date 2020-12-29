@@ -15,6 +15,7 @@ import com.mapbox.android.core.location.LocationEngineResult
 import com.mapbox.api.directions.v5.DirectionsCriteria
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
+import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
@@ -37,11 +38,11 @@ import com.mapbox.navigation.examples.utils.Utils.PRIMARY_ROUTE_BUNDLE_KEY
 import com.mapbox.navigation.examples.utils.Utils.getRouteFromBundle
 import com.mapbox.navigation.examples.utils.extensions.toPoint
 import com.mapbox.navigation.ui.camera.NavigationCamera
+import com.mapbox.navigation.ui.internal.ThemeSwitcher
 import com.mapbox.navigation.ui.map.NavigationMapboxMap
-import kotlinx.android.synthetic.main.activity_basic_navigation_layout.container
-import kotlinx.android.synthetic.main.activity_basic_navigation_layout.fabToggleStyle
-import kotlinx.android.synthetic.main.activity_basic_navigation_layout.mapView
-import kotlinx.android.synthetic.main.activity_basic_navigation_layout.startNavigation
+import com.mapbox.navigation.ui.route.MapboxRouteArrows
+import com.mapbox.navigation.ui.route.RouteArrowOptions
+import kotlinx.android.synthetic.main.activity_basic_navigation_layout.*
 import timber.log.Timber
 import java.lang.ref.WeakReference
 
@@ -62,6 +63,7 @@ open class BasicNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mapInstanceState: Bundle? = null
     private val mapboxReplayer = MapboxReplayer()
     private var directionRoute: DirectionsRoute? = null
+    private var mapboxRouteArrows: MapboxRouteArrows? = null
 
     private val mapStyles = listOf(
         Style.MAPBOX_STREETS,
@@ -126,6 +128,13 @@ open class BasicNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
                 else -> restoreNavigation()
             }
+
+            val styleRes = ThemeSwitcher.retrieveAttrResourceId(
+                this,
+                R.attr.navigationViewLocationLayerStyle,
+                R.style.MapboxStyleNavigationLocationLayerStyle
+            )
+            mapboxRouteArrows = MapboxRouteArrows(RouteArrowOptions.Builder(this, styleRes).build())
         }
         mapboxMap.addOnMapLongClickListener { latLng ->
             mapboxMap.locationComponent.lastKnownLocation?.let { originLocation ->
@@ -147,6 +156,10 @@ open class BasicNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         override fun onRouteProgressChanged(routeProgress: RouteProgress) {
             // do something with the route progress
             Timber.i("route progress: ${routeProgress.currentState}")
+            mapboxRouteArrows?.addUpcomingManeuverArrow(
+                navigationMapboxMap!!.retrieveMap().style!!,
+                routeProgress
+            )
         }
     }
 
@@ -172,6 +185,7 @@ open class BasicNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             if (routes.isNotEmpty()) {
                 directionRoute = routes[0]
                 navigationMapboxMap?.drawRoute(routes[0])
+                navigationMapboxMap?.retrieveMapRoute()?.updateRouteArrowVisibilityTo(false)
                 startNavigation.visibility = View.VISIBLE
             } else {
                 startNavigation.visibility = View.GONE
@@ -201,9 +215,47 @@ open class BasicNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         fabToggleStyle.setOnClickListener {
-            navigationMapboxMap?.retrieveMap()?.setStyle(mapStyles.shuffled().first())
+            //navigationMapboxMap?.retrieveMap()?.setStyle(mapStyles.shuffled().first())
+            when (counter) {
+                0 -> mapboxRouteArrows?.addArrow(
+                    navigationMapboxMap!!.retrieveMap().style!!,
+                    firstPoints
+                )
+                1 -> mapboxRouteArrows?.addArrow(
+                    navigationMapboxMap!!.retrieveMap().style!!,
+                    secondPoints
+                )
+                else -> {
+                    mapboxRouteArrows?.removeArrow(
+                        navigationMapboxMap!!.retrieveMap().style!!,
+                        listOf(Point.fromLngLat(-122.528540, 37.971168))
+                    )
+                }
+            }
+            counter++
         }
     }
+    var counter = 0
+    val firstPoints = listOf(
+        Point.fromLngLat(-122.528540, 37.971168),
+        Point.fromLngLat(-122.528637, 37.970187),
+        Point.fromLngLat(-122.528076, 37.969760)
+    )
+    val secondPoints = listOf(
+        Point.fromLngLat(-122.523669, 37.975386),
+        Point.fromLngLat(-122.523729, 37.975194),
+        Point.fromLngLat(-122.523729, 37.975194),
+        Point.fromLngLat(-122.523579, 37.975173),
+        Point.fromLngLat(-122.52339223607466, 37.97514631967111)
+    )
+
+    /*
+Point{type=Point, bbox=null, coordinates=[-122.52182633236568, 37.97404354665053]}
+Point{type=Point, bbox=null, coordinates=[-122.521643, 37.974015]}
+Point{type=Point, bbox=null, coordinates=[-122.521491, 37.97399]}
+Point{type=Point, bbox=null, coordinates=[-122.521491, 37.97399]}
+Point{type=Point, bbox=null, coordinates=[-122.52157025046168, 37.97372762307155]}
+     */
 
     override fun onStart() {
         super.onStart()
