@@ -18,6 +18,7 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import com.mapbox.mapboxsdk.utils.MathUtils
 import com.mapbox.navigation.base.trip.model.RouteProgress
+import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.ui.internal.route.RouteConstants
 import com.mapbox.navigation.ui.internal.route.RouteConstants.MAX_DEGREES
 import com.mapbox.navigation.ui.internal.utils.MapImageUtils
@@ -26,20 +27,34 @@ import com.mapbox.turf.TurfMeasurement
 import com.mapbox.turf.TurfMisc
 import java.util.concurrent.CopyOnWriteArrayList
 
+/**
+ * A more featured implementation for adding multiple route arrows on the map. While this class
+ * will add a maneuver arrow based on [RouteProgress] you can also add additional arrows based
+ * on a collection of two or more points. It is suggested that you use either this class
+ * for managing route arrows or the embedded default implementation that is created and managed by
+ * [NavigationMapRoute]. To use this class exclusively you should call
+ * [NavigationMapRoute.updateRouteArrowVisibilityTo(false)] in order to disable the default
+ * implementation. You should also register your own [RouteProgressObserver] and pass the
+ * [RouteProgress] objects emitted to this class if you want the same maneuver arrow behavior as
+ * the default implementation. For more fine grained control you can add and remove arrows
+ * at any time using the methods in this class.
+ */
 class MapboxRouteArrows(
     private val options: RouteArrowOptions
 ) {
 
-    private val ARROW_BEARING_ADVANCED = "mapbox-navigation-arrow-bearing-advanced"
-    private val ARROW_SHAFT_SOURCE_ID_ADVANCED = "mapbox-navigation-arrow-shaft-source-advanced"
-    private val ARROW_HEAD_SOURCE_ID_ADVANCED = "mapbox-navigation-arrow-head-source-advanced"
-    private val ARROW_SHAFT_CASING_LINE_LAYER_ID_ADVANCED =
-        "mapbox-navigation-arrow-shaft-casing-layer-advanced"
-    private val ARROW_SHAFT_LINE_LAYER_ID_ADVANCED = "mapbox-navigation-arrow-shaft-layer-advanced"
-    private val ARROW_HEAD_ICON_ADVANCED = "mapbox-navigation-arrow-head-icon-advanced"
-    private val ARROW_HEAD_ICON_CASING_ADVANCED = "mapbox-navigation-arrow-head-icon-casing-advanced"
-    private val ARROW_HEAD_CASING_LAYER_ID_ADVANCED = "mapbox-navigation-arrow-head-casing-layer-advanced"
-    private val ARROW_HEAD_LAYER_ID_ADVANCED = "mapbox-navigation-arrow-head-layer-advanced"
+    companion object {
+        const val ARROW_BEARING_ADVANCED = "mapbox-navigation-arrow-bearing-advanced"
+        const val ARROW_SHAFT_SOURCE_ID_ADVANCED = "mapbox-navigation-arrow-shaft-source-advanced"
+        const val ARROW_HEAD_SOURCE_ID_ADVANCED = "mapbox-navigation-arrow-head-source-advanced"
+        const val ARROW_SHAFT_CASING_LINE_LAYER_ID_ADVANCED =
+            "mapbox-navigation-arrow-shaft-casing-layer-advanced"
+        const val ARROW_SHAFT_LINE_LAYER_ID_ADVANCED = "mapbox-navigation-arrow-shaft-layer-advanced"
+        const val ARROW_HEAD_ICON_ADVANCED = "mapbox-navigation-arrow-head-icon-advanced"
+        const val ARROW_HEAD_ICON_CASING_ADVANCED = "mapbox-navigation-arrow-head-icon-casing-advanced"
+        const val ARROW_HEAD_CASING_LAYER_ID_ADVANCED = "mapbox-navigation-arrow-head-casing-layer-advanced"
+        const val ARROW_HEAD_LAYER_ID_ADVANCED = "mapbox-navigation-arrow-head-layer-advanced"
+    }
 
     private val arrows: CopyOnWriteArrayList<List<Point>> = CopyOnWriteArrayList()
     private var maneuverArrow: List<Point> = listOf()
@@ -49,14 +64,7 @@ class MapboxRouteArrows(
      * collection of points represents a single arrow.
      */
     fun getArrows(): List<List<Point>> {
-        return if (maneuverArrow.isEmpty()) {
-            arrows.toList()
-        } else {
-            arrows.toMutableList().run {
-                this.add(maneuverArrow)
-                this.toList()
-            }
-        }
+        return arrows.toList()
     }
 
     /**
@@ -146,11 +154,11 @@ class MapboxRouteArrows(
      * @param style a valid map style
      */
     fun arrowsAreVisible(style: Style): Boolean {
-        return style.getLayer(ARROW_SHAFT_CASING_LINE_LAYER_ID_ADVANCED)?.visibility ?: "" ==
+        return style.getLayer(ARROW_SHAFT_CASING_LINE_LAYER_ID_ADVANCED)?.visibility?.value ?: "" ==
             VISIBLE &&
-        style.getLayer(ARROW_SHAFT_LINE_LAYER_ID_ADVANCED)?.visibility ?: "" == VISIBLE &&
-        style.getLayer(ARROW_HEAD_CASING_LAYER_ID_ADVANCED)?.visibility ?: "" == VISIBLE &&
-        style.getLayer(ARROW_HEAD_LAYER_ID_ADVANCED)?.visibility ?: "" == VISIBLE
+        style.getLayer(ARROW_SHAFT_LINE_LAYER_ID_ADVANCED)?.visibility?.value ?: "" == VISIBLE &&
+        style.getLayer(ARROW_HEAD_CASING_LAYER_ID_ADVANCED)?.visibility?.value ?: "" == VISIBLE &&
+        style.getLayer(ARROW_HEAD_LAYER_ID_ADVANCED)?.visibility?.value ?: "" == VISIBLE
     }
 
     /**

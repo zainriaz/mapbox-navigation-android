@@ -27,10 +27,8 @@ import com.mapbox.mapboxsdk.style.layers.PropertyValue
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-import com.mapbox.navigation.base.trip.model.RouteLegProgress
 import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.base.trip.model.RouteProgressState
-import com.mapbox.navigation.base.trip.model.RouteStepProgress
 import com.mapbox.navigation.testing.MainCoroutineRule
 import com.mapbox.navigation.ui.R
 import com.mapbox.navigation.ui.internal.ThemeSwitcher
@@ -2550,29 +2548,6 @@ class MapRouteLineTest {
             16,
             0.375f
         )
-    }
-
-    @Test
-    fun delme() {
-        val routeProgress = mockk<RouteProgress> {
-            every { currentLegProgress } returns mockk<RouteLegProgress> {
-                every { currentStepProgress } returns mockk<RouteStepProgress> {
-                    every { stepPoints } returns listOf(
-                        Point.fromLngLat(-122.523729, 37.975194),
-                        Point.fromLngLat(-122.523579, 37.975173),
-                        Point.fromLngLat(-122.523117, 37.975107),
-                        Point.fromLngLat(-122.522098, 37.974946),
-                        Point.fromLngLat(-122.522054, 37.974911),
-                        Point.fromLngLat(-122.522238, 37.974162),
-                        Point.fromLngLat(-122.522308, 37.974121)
-                    )
-                }
-            }
-        }
-
-        val result = MapRouteArrow.obtainArrowPointsFrom(routeProgress)
-
-        result.size
     }
 
     @After
