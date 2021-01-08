@@ -11,6 +11,7 @@ import com.mapbox.navigator.BannerInstruction
 import com.mapbox.navigator.ElectronicHorizonObserver
 import com.mapbox.navigator.NavigationStatus
 import com.mapbox.navigator.NavigatorConfig
+import com.mapbox.navigator.NavigatorObserver
 import com.mapbox.navigator.PredictiveCacheController
 import com.mapbox.navigator.RouterResult
 import com.mapbox.navigator.SensorData
@@ -80,6 +81,8 @@ interface MapboxNativeNavigator {
      * is earlier than a previous call, the last status will be returned. The function does not support re-winding time.
      */
     suspend fun getStatus(navigatorPredictionMillis: Long): TripStatus
+
+    fun setNavigatorObserver(navigatorObserver: NavigatorObserver?)
 
     // Routing
 

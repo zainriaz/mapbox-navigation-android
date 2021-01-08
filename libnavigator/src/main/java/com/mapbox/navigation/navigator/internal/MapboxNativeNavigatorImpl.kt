@@ -19,6 +19,7 @@ import com.mapbox.navigator.ElectronicHorizonObserver
 import com.mapbox.navigator.NavigationStatus
 import com.mapbox.navigator.Navigator
 import com.mapbox.navigator.NavigatorConfig
+import com.mapbox.navigator.NavigatorObserver
 import com.mapbox.navigator.PredictiveCacheController
 import com.mapbox.navigator.PredictiveCacheControllerOptions
 import com.mapbox.navigator.PredictiveLocationTrackerOptions
@@ -135,6 +136,25 @@ object MapboxNativeNavigatorImpl : MapboxNativeNavigator {
                 status
             )
         }
+
+    suspend fun generateTripStatusFrom(navigatorStatus: NavigationStatus): TripStatus =
+        withContext(NavigatorDispatcher) {
+            TripStatus(
+                navigatorStatus.location.toLocation(),
+                navigatorStatus.key_points.map { it.toLocation() },
+                navigatorMapper.getRouteProgress(
+                    route,
+                    routeBufferGeoJson,
+                    navigatorStatus,
+                    navigator!!.remainingWaypoints().size
+                ),
+                navigatorStatus.routeState == RouteState.OFF_ROUTE,
+                navigatorStatus
+            )
+        }
+
+    override fun setNavigatorObserver(navigatorObserver: NavigatorObserver?) =
+        navigator!!.setObserver(navigatorObserver)
 
     // Routing
 
