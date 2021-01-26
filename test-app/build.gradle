@@ -84,6 +84,7 @@ dependencies {
     implementation project(':libnavui-tripprogress')
     implementation project(':libnavui-maneuver')
     implementation project(':libnavui-voice')
+    implementation project(':libnavui-speedlimit')
 
     // test
     androidTestImplementation project(':libtesting-ui')
