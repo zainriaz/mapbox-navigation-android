@@ -37,6 +37,12 @@
     </activity>
 
     <activity
+        android:name=".MapboxViewsActivity"
+        android:label="@string/title_activity_vies"
+        android:screenOrientation="portrait">
+    </activity>
+
+    <activity
         android:name=".MapboxSignboardActivity"
         android:label="@string/title_signboard"
         android:screenOrientation="portrait">

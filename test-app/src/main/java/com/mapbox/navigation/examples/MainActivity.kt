@@ -14,6 +14,7 @@ import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.navigation.examples.core.MapboxRouteLineApiExampleActivity
 import com.mapbox.navigation.examples.core.MapboxSignboardActivity
 import com.mapbox.navigation.examples.core.MapboxSnapshotActivity
+import com.mapbox.navigation.examples.core.MapboxViewsActivity
 import com.mapbox.navigation.examples.core.R
 import com.mapbox.navigation.examples.core.SlackLineActivity
 import com.mapbox.navigation.examples.core.TripProgressActivity
@@ -78,6 +79,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener {
                 getString(R.string.title_trip_progress),
                 getString(R.string.description_trip_progress),
                 TripProgressActivity::class.java
+            ),
+            SampleItem(
+                getString(R.string.title_activity_vies),
+                getString(R.string.description_activity_views),
+                MapboxViewsActivity::class.java
             )
         )
     }
