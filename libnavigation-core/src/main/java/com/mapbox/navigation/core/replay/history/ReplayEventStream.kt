@@ -102,8 +102,8 @@ class ReplayEventStream(
                 ReplayEventUpdateLocation::class.java
             )
             "getStatus" -> {
-                val eventTimestamp = (jsonObject["event_timestamp"]
-                    ?: jsonObject["timestamp"]).asDouble
+                val eventTimestamp =
+                    (jsonObject["event_timestamp"] ?: jsonObject["timestamp"]).asDouble
                 ReplayEventGetStatus(
                     eventTimestamp = eventTimestamp
                 )

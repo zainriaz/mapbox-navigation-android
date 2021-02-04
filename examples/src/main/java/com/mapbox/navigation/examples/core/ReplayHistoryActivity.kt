@@ -27,9 +27,9 @@ import com.mapbox.navigation.core.fasterroute.FasterRouteObserver
 import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import com.mapbox.navigation.core.replay.history.CustomEventMapper
-import com.mapbox.navigation.core.replay.history.ReplayEventStream
 import com.mapbox.navigation.core.replay.history.ReplayEventBase
 import com.mapbox.navigation.core.replay.history.ReplayEventBuffer
+import com.mapbox.navigation.core.replay.history.ReplayEventStream
 import com.mapbox.navigation.core.replay.history.ReplayEventsObserver
 import com.mapbox.navigation.core.replay.history.ReplaySetRoute
 import com.mapbox.navigation.core.trip.session.MapMatcherResult
@@ -116,7 +116,10 @@ class ReplayHistoryActivity : AppCompatActivity() {
     }
 
     private fun attachEventPusher() {
-        replayEventBuffer = ReplayEventBuffer(navigationContext!!.mapboxReplayer, replayEventStream!!)
+        replayEventBuffer = ReplayEventBuffer(
+            navigationContext!!.mapboxReplayer,
+            replayEventStream!!
+        )
         navigationContext!!.mapboxReplayer.registerObserver(replayEventBuffer!!)
         replayEventBuffer!!.pushEvents()
     }
