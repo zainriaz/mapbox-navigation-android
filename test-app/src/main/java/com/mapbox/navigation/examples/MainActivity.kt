@@ -16,12 +16,14 @@ import com.mapbox.navigation.examples.core.MapboxRouteLineApiExampleActivity
 import com.mapbox.navigation.examples.core.MapboxSignboardActivity
 import com.mapbox.navigation.examples.core.MapboxSnapshotActivity
 import com.mapbox.navigation.examples.core.R
+import com.mapbox.navigation.examples.core.ReplayHistoryActivity
 import com.mapbox.navigation.examples.core.SlackLineActivity
 import com.mapbox.navigation.examples.core.TripProgressActivity
 import com.mapbox.navigation.examples.core.camera.CameraAnimationsActivity
 import com.mapbox.navigation.examples.util.LocationPermissionsHelper
 import com.mapbox.navigation.examples.util.LocationPermissionsHelper.Companion.areLocationPermissionsGranted
-import kotlinx.android.synthetic.main.main_activity_layout.*
+import kotlinx.android.synthetic.main.main_activity_layout.coreRecycler
+import java.util.ArrayList
 
 class MainActivity : AppCompatActivity(), PermissionsListener {
 
@@ -84,6 +86,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener {
                 getString(R.string.title_maneuver),
                 getString(R.string.description_maneuver),
                 MapboxManeuverActivity::class.java
+            ),
+            SampleItem(
+                getString(R.string.title_replay_history_kotlin),
+                getString(R.string.description_replay_history_kotlin),
+                ReplayHistoryActivity::class.java
             )
         )
     }
