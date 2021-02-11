@@ -36,7 +36,6 @@ dependencies {
     androidTestImplementation project(':libtesting-ui')
     androidTestImplementation dependenciesList.testRunner
     androidTestUtil dependenciesList.testOrchestrator
-    implementation dependenciesList.timber
 
     // ktlint
     ktlint dependenciesList.ktlint

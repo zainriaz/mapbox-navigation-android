@@ -21,6 +21,8 @@ import androidx.core.content.ContextCompat;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.api.directions.v5.models.DirectionsRoute;
 import com.mapbox.api.directions.v5.models.RouteOptions;
+import com.mapbox.base.common.logger.Logger;
+import com.mapbox.base.common.logger.model.Message;
 import com.mapbox.geojson.Point;
 import com.mapbox.maps.CameraOptions;
 import com.mapbox.maps.EdgeInsets;
@@ -68,6 +70,7 @@ public class SlackLineActivity extends AppCompatActivity implements PermissionsL
   private CameraAnimationsPlugin mapCamera;
   private MapboxReplayer mapboxReplayer = new MapboxReplayer();
   private MapboxNavigation mapboxNavigation;
+  private Logger mapboxLogger;
   private ProgressBar routeLoading;
   private Slackline slackline = new Slackline(this);
 
@@ -109,6 +112,8 @@ public class SlackLineActivity extends AppCompatActivity implements PermissionsL
     mapboxNavigation.registerRouteProgressObserver(replayProgressObserver);
     mapboxNavigation.startTripSession();
 
+    mapboxLogger = mapboxNavigation.getLogger();
+
     mapboxReplayer.pushRealLocation(this, 0.0);
     mapboxReplayer.play();
   }
@@ -118,7 +123,13 @@ public class SlackLineActivity extends AppCompatActivity implements PermissionsL
     mapboxMap.loadStyleUri(Style.MAPBOX_STREETS, style -> {
       initializeLocationComponent();
       getGesturePlugin().addOnMapLongClickListener(this);
-    }, (mapLoadError, s) -> Timber.e("Error loading map: %s", mapLoadError.name()));
+    }, (mapLoadError, s) -> {
+      mapboxLogger.e(
+        null,
+        new Message(String.format("Error loading map: %s", mapLoadError.name())),
+        null
+      );
+    });
   }
 
   @Override
@@ -189,12 +200,20 @@ public class SlackLineActivity extends AppCompatActivity implements PermissionsL
 
     @Override
     public void onRoutesRequestFailure(@NotNull Throwable throwable, @NotNull RouteOptions routeOptions) {
-      Timber.e("route request failure %s", throwable.toString());
+      mapboxLogger.e(
+        null,
+        new Message(String.format("route request failure %s", throwable.toString())),
+        null
+      );
     }
 
     @Override
     public void onRoutesRequestCanceled(@NotNull RouteOptions routeOptions) {
-      Timber.d("route request canceled");
+      mapboxLogger.d(
+        null,
+        new Message("route request canceled"),
+        null
+      );
     }
   };
 
@@ -224,7 +243,11 @@ public class SlackLineActivity extends AppCompatActivity implements PermissionsL
   private LocationObserver locationObserver = new LocationObserver() {
     @Override
     public void onRawLocationChanged(@NotNull Location rawLocation) {
-      Timber.d("raw location %s", rawLocation.toString());
+      mapboxLogger.d(
+        null,
+        new Message(String.format("raw location %s", rawLocation.toString())),
+        null
+      );
     }
 
     @Override

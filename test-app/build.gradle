@@ -107,9 +107,6 @@ dependencies {
 
     implementation dependenciesList.multidex
 
-    // Logging
-    implementation dependenciesList.timber
-
     // Leak Canary
     debugImplementation dependenciesList.leakCanaryDebug
 }
