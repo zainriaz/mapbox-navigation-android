@@ -48,6 +48,11 @@
     </activity>
 
     <activity
+        android:name=".DropInActivity"
+        android:label="@string/title_drop_in_ui">
+    </activity>
+
+    <activity
         android:name="com.mapbox.navigation.examples.MainActivity"
         android:label="@string/title_navigation_route_ui"
         android:screenOrientation="portrait">

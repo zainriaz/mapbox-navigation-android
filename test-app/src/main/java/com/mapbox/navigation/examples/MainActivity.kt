@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.mapbox.android.core.permissions.PermissionsListener
+import com.mapbox.navigation.examples.core.DropInActivity
 import com.mapbox.navigation.examples.core.MapboxRouteLineApiExampleActivity
 import com.mapbox.navigation.examples.core.MapboxSignboardActivity
 import com.mapbox.navigation.examples.core.MapboxSnapshotActivity
@@ -78,6 +79,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener {
                 getString(R.string.title_trip_progress),
                 getString(R.string.description_trip_progress),
                 TripProgressActivity::class.java
+            ),
+            SampleItem(
+                getString(R.string.title_drop_in_ui),
+                getString(R.string.description_drop_in_poc),
+                DropInActivity::class.java
             )
         )
     }
