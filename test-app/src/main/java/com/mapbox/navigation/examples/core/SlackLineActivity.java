@@ -54,8 +54,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import timber.log.Timber;
-
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.mapbox.navigation.examples.util.LocationPermissionsHelperKt.LOCATION_PERMISSIONS_REQUEST_CODE;
 
@@ -123,13 +121,11 @@ public class SlackLineActivity extends AppCompatActivity implements PermissionsL
     mapboxMap.loadStyleUri(Style.MAPBOX_STREETS, style -> {
       initializeLocationComponent();
       getGesturePlugin().addOnMapLongClickListener(this);
-    }, (mapLoadError, s) -> {
-      mapboxLogger.e(
-        null,
-        new Message(String.format("Error loading map: %s", mapLoadError.name())),
-        null
-      );
-    });
+    }, (mapLoadError, s) -> mapboxLogger.e(
+      null,
+      new Message(String.format("Error loading map: %s", mapLoadError.name())),
+      null
+    ));
   }
 
   @Override

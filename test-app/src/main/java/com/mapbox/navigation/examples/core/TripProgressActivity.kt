@@ -6,11 +6,13 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
+import com.mapbox.base.common.logger.Logger
+import com.mapbox.base.common.logger.model.Message
+import com.mapbox.base.common.logger.model.Tag
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
@@ -56,6 +58,7 @@ class TripProgressActivity : AppCompatActivity(), OnMapLongClickListener {
     private lateinit var locationComponent: LocationComponentPlugin
     private lateinit var mapCamera: CameraAnimationsPlugin
     private lateinit var mapboxNavigation: MapboxNavigation
+    private lateinit var mapboxLogger: Logger
     private val mapboxReplayer = MapboxReplayer()
     private lateinit var tripProgressApiApi: MapboxTripProgressApi
 
@@ -108,6 +111,9 @@ class TripProgressActivity : AppCompatActivity(), OnMapLongClickListener {
         mapboxNavigation.registerLocationObserver(locationObserver)
         mapboxNavigation.registerRouteProgressObserver(replayProgressObserver)
         mapboxNavigation.registerRoutesObserver(routesObserver)
+
+        mapboxLogger = mapboxNavigation.getLogger()
+
         mapboxReplayer.pushRealLocation(this, 0.0)
         mapboxReplayer.play()
     }
@@ -121,9 +127,9 @@ class TripProgressActivity : AppCompatActivity(), OnMapLongClickListener {
             },
             object : OnMapLoadErrorListener {
                 override fun onMapLoadError(mapLoadError: MapLoadError, msg: String) {
-                    Log.e(
-                        TripProgressActivity::class.java.simpleName,
-                        "Error loading map: " + mapLoadError.name
+                    mapboxLogger.e(
+                        Tag(TripProgressActivity::class.java.simpleName),
+                        Message("Error loading map: ${mapLoadError.name}")
                     )
                 }
             }
