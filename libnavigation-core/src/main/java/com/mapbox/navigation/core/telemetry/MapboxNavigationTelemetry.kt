@@ -24,9 +24,9 @@ import com.mapbox.navigation.core.NavigationSession.State.ACTIVE_GUIDANCE
 import com.mapbox.navigation.core.NavigationSession.State.FREE_DRIVE
 import com.mapbox.navigation.core.NavigationSession.State.IDLE
 import com.mapbox.navigation.core.NavigationSessionStateObserver
+import com.mapbox.navigation.core.accounts.MapboxNavigationAccounts
 import com.mapbox.navigation.core.arrival.ArrivalObserver
 import com.mapbox.navigation.core.directions.session.RoutesObserver
-import com.mapbox.navigation.core.internal.accounts.MapboxNavigationAccounts
 import com.mapbox.navigation.core.internal.telemetry.CachedNavigationFeedbackEvent
 import com.mapbox.navigation.core.telemetry.events.AppMetadata
 import com.mapbox.navigation.core.telemetry.events.FeedbackEvent
@@ -516,7 +516,7 @@ internal object MapboxNavigationTelemetry :
     private fun postTurnstileEvent() {
         val turnstileEvent =
             AppUserTurnstile(sdkIdentifier, BuildConfig.MAPBOX_NAVIGATION_VERSION_NAME).also {
-                it.setSkuId(MapboxNavigationAccounts.getInstance(context).obtainSkuId())
+                it.setSkuId(MapboxNavigationAccounts.obtainSkuId())
             }
         val event = NavigationAppUserTurnstileEvent(turnstileEvent)
         sendEvent(event)
