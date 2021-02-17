@@ -117,6 +117,8 @@ internal object RouteArrowUtils {
             style.addImage(RouteConstants.ARROW_HEAD_ICON, arrowHeadBitmap)
         }
 
+        //val widthExp = Expression.fromRaw("[\"interpolate\",[\"exponential\",1.5],[\"zoom\"],4.0,[\"*\",3.0,0.5],10.0,[\"*\",4.0,0.5],13.0,[\"*\",6.0,0.5],16.0,[\"*\",10.0,0.5],19.0,[\"*\",14.0,0.5],22.0,[\"*\",18.0,0.5]]")
+
         // arrow shaft casing
         if (style.styleLayerExists(RouteLayerConstants.ARROW_SHAFT_CASING_LINE_LAYER_ID)) {
             style.removeStyleLayer(RouteLayerConstants.ARROW_SHAFT_CASING_LINE_LAYER_ID)
@@ -135,12 +137,39 @@ internal object RouteArrowUtils {
                     linear()
                     zoom()
                     stop {
-                        literal(RouteConstants.MIN_ARROW_ZOOM)
-                        literal(RouteConstants.MIN_ZOOM_ARROW_SHAFT_CASING_SCALE)
+                        literal(10.0)
+                        product {
+                            literal(7.0)
+                            literal(0.7)
+                        }
                     }
                     stop {
-                        literal(RouteConstants.MAX_ARROW_ZOOM)
-                        literal(RouteConstants.MAX_ZOOM_ARROW_SHAFT_CASING_SCALE)
+                        literal(14.0)
+                        product {
+                            literal(10.5)
+                            literal(0.7)
+                        }
+                    }
+                    stop {
+                        literal(16.5)
+                        product {
+                            literal(15.5)
+                            literal(0.7)
+                        }
+                    }
+                    stop {
+                        literal(19.0)
+                        product {
+                            literal(24.0)
+                            literal(0.7)
+                        }
+                    }
+                    stop {
+                        literal(22.0)
+                        product {
+                            literal(29.0)
+                            literal(0.7)
+                        }
                     }
                 }
             )
@@ -220,12 +249,46 @@ internal object RouteArrowUtils {
                     linear()
                     zoom()
                     stop {
-                        literal(RouteConstants.MIN_ARROW_ZOOM)
-                        literal(RouteConstants.MIN_ZOOM_ARROW_SHAFT_SCALE)
+                        literal(4.0)
+                        product {
+                            literal(3.0)
+                            literal(0.7)
+                        }
                     }
                     stop {
-                        literal(RouteConstants.MAX_ARROW_ZOOM)
-                        literal(RouteConstants.MAX_ZOOM_ARROW_SHAFT_SCALE)
+                        literal(10.0)
+                        product {
+                            literal(4.0)
+                            literal(0.7)
+                        }
+                    }
+                    stop {
+                        literal(13.0)
+                        product {
+                            literal(6.0)
+                            literal(0.7)
+                        }
+                    }
+                    stop {
+                        literal(16.0)
+                        product {
+                            literal(10.0)
+                            literal(0.7)
+                        }
+                    }
+                    stop {
+                        literal(19.0)
+                        product {
+                            literal(14.0)
+                            literal(0.7)
+                        }
+                    }
+                    stop {
+                        literal(22.0)
+                        product {
+                            literal(18.0)
+                            literal(0.5)
+                        }
                     }
                 }
             )
