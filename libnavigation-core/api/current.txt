@@ -8,6 +8,7 @@ package com.mapbox.navigation.core {
     method public void detachFasterRouteObserver();
     method public com.mapbox.navigation.core.trip.session.EHorizonGraphAccessor getEHorizonGraphAccessor();
     method public com.mapbox.navigation.core.trip.session.EHorizonObjectsStore getEHorizonObjectsStore();
+    method public com.mapbox.base.common.logger.Logger getLogger();
     method public com.mapbox.navigation.base.options.NavigationOptions getNavigationOptions();
     method public com.mapbox.navigation.core.reroute.RerouteController? getRerouteController();
     method public java.util.List<com.mapbox.api.directions.v5.models.DirectionsRoute> getRoutes();
